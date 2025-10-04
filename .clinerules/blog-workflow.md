@@ -2,8 +2,19 @@
 
 ## Creating New Blog Posts
 
-### 1. Create Markdown File
-Location: `src/lib/assets/blog/YYYY-MM-DD-slug.md`
+### Option 1: Markdown Route (Recommended)
+Create markdown files directly in `src/routes/` for automatic route generation.
+
+**Location**: `src/routes/YYYY-MM-DD-slug.md`
+
+**Example**: `src/routes/2025-10-04-test-post.md`
+
+### Option 2: Asset-based Blog Post
+Create markdown files in the assets directory for content that may be processed differently.
+
+**Location**: `src/lib/assets/blog/YYYY-MM-DD-slug.md`
+
+**Example**: `src/lib/assets/blog/2025-10-04-dotfiles.md`
 
 ### 2. Required Frontmatter
 ```yaml
@@ -21,8 +32,10 @@ published: true
 - Images can be placed in `src/lib/assets/blog/images/`
 - Reference images with relative paths
 
-## 3. Generate Route
-The system will automatically create routes for blog posts based on the filename slug.
+## 3. Route Generation
+- **Markdown routes** in `src/routes/` automatically generate routes at `/slug`
+- **Asset-based posts** may require custom routing logic
+- SvelteKit handles route generation automatically for `.md` files in routes directory
 
 ## 4. Testing
 - Check post renders correctly at `/blog/[slug]`

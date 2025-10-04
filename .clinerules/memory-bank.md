@@ -23,28 +23,28 @@ e2e/                # End-to-end tests
 ├── demo.test.ts
 
 src/
-├── app.css         # Global styles (Tailwind CSS)
+├── app.css         # Global styles (Tailwind CSS imports only)
 ├── app.d.ts        # TypeScript declarations
 ├── app.html        # HTML template
 ├── demo.spec.ts    # Demo test file
 ├── lib/            # Shared components/utilities
-│   ├── index.ts    # Library exports
-│   ├── Menu.svelte # Navigation component
-│   ├── utils.ts    # Utility functions
+│   ├── index.ts    # Library exports (empty placeholder file)
+│   ├── Menu.svelte # Navigation component with hamburger menu
+│   ├── utils.ts    # Utility functions (cn, flyAndScale transition)
 │   └── assets/     # Static assets
 │       ├── github.svg
 │       └── blog/   # Blog content and assets
 │           └── 2025-10-04-dotfiles.md
 └── routes/         # Application routes (SvelteKit file-based routing)
-    ├── +layout.svelte      # Root layout
+    ├── +layout.svelte      # Root layout with Chrome DevTools suppression
     ├── +page.svelte        # Home page
     ├── 2025-10-04-test-post.md # Test blog post (markdown route)
     ├── about/
     │   └── +page.svelte    # About page
-    └── blog/
-        ├── [slug]/         # Dynamic blog post routes
-        │   └── +page.svelte
-        └── posts/          # Blog posts directory
+    └── .well-known/
+        └── appspecific/
+            └── com.chrome.devtools.json/
+                └── +server.ts # Chrome DevTools suppression endpoint
 
 static/             # Static assets (served at root)
 ├── ai.txt          # AI crawler instructions
@@ -55,6 +55,9 @@ static/             # Static assets (served at root)
 
 Root level:
 ├── .clinerules/    # Project rules and documentation
+│   ├── blog-workflow.md    # Blog post creation workflow
+│   ├── components.md       # Component documentation
+│   └── memory-bank.md      # This file - project overview
 ├── .gitignore
 ├── .prettierrc     # Prettier configuration
 ├── docker-compose.yaml
