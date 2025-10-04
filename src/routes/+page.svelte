@@ -9,21 +9,70 @@
   const modules = import.meta.glob("../lib/assets/blog/*.md", { query: "raw" });
 
   /**
-   * @type { {slug: string; content: {default: string}; date: Date;}[] }
+   * @type { {slug: string; content: string; frontmatter: Record<string, any>; date: Date;}[] }
    */
-  let posts: { slug: string; content: string; date: Date }[] = [];
+  let posts: { slug: string; content: string; frontmatter: Record<string, any>; date: Date }[] = [];
 
   // Load and process markdown files
   Promise.all(
     Object.entries(modules).map(async ([path, module]) => {
-      const content: { default: string } = (await module()) as {
+      const rawContent: { default: string } = (await module()) as {
         default: string;
       };
 
       const fileName = (path.split("/").pop() ?? "post").replace(".md", "");
+
+      // Parse frontmatter and content
+      let content = rawContent.default;
+      let frontmatter: Record<string, any> = {};
+
+      // Strip frontmatter from content and parse it
+      if (content.trimStart().startsWith('---')) {
+        const endMarkerIndex = content.indexOf('---', 3);
+        if (endMarkerIndex !== -1) {
+          const frontmatterText = content.substring(3, endMarkerIndex).trim();
+          content = content.substring(endMarkerIndex + 3).trim();
+
+          // Simple frontmatter parsing
+          const lines = frontmatterText.split('\n');
+          for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (trimmedLine && trimmedLine.includes(':')) {
+              const colonIndex = trimmedLine.indexOf(':');
+              const key = trimmedLine.substring(0, colonIndex).trim();
+              let value = trimmedLine.substring(colonIndex + 1).trim();
+
+              // Handle arrays (e.g., tags: ["tag1", "tag2"])
+              if (value.startsWith('[') && value.endsWith(']')) {
+                const arrayContent = value.slice(1, -1);
+                const items = arrayContent.split(',').map((item: string) => {
+                  const trimmed = item.trim();
+                  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+                      (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+                    return trimmed.slice(1, -1);
+                  }
+                  return trimmed;
+                }).filter((item: string) => item.length > 0);
+                frontmatter[key] = items;
+              }
+              // Handle quoted strings
+              else if ((value.startsWith('"') && value.endsWith('"')) ||
+                       (value.startsWith("'") && value.endsWith("'"))) {
+                frontmatter[key] = value.slice(1, -1);
+              }
+              // Handle plain strings
+              else {
+                frontmatter[key] = value;
+              }
+            }
+          }
+        }
+      }
+
       return {
         slug: fileName,
-        content: content.default,
+        content: content,
+        frontmatter: frontmatter,
         date: new Date(fileName.split("-").slice(0, 3).join("-")),
       };
     }),
@@ -57,9 +106,6 @@
           <h3 class="text-xl font-semibold mb-2 heading-h1">
             {post.slug.replace(/^\d{4}-\d{2}-\d{2}-/, "").replace(/-/g, " ")}
           </h3>
-          <div class="text-sm text-gray-500 mb-4">
-            {post.date.toLocaleDateString()}
-          </div>
           <div class="prose">
             <Markdown md={post.content}>
               {#snippet h1(props)}
@@ -85,6 +131,22 @@
 
             </Markdown>
           </div>
+
+          <footer class="mt-4 pt-4 border-t border-gray-200">
+            <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+              <time>{post.date.toLocaleDateString()}</time>
+
+              {#if post.frontmatter.tags && post.frontmatter.tags.length > 0}
+                <div class="flex flex-wrap gap-2">
+                  {#each post.frontmatter.tags as tag}
+                    <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
+                      {tag}
+                    </span>
+                  {/each}
+                </div>
+              {/if}
+            </div>
+          </footer>
         </article>
       {/each}
     {/if}

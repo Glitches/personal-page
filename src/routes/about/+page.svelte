@@ -49,9 +49,6 @@
       <img class="h-10" alt="GitHub profile" src={github} />
     </a>
   </div>
-  <div class="flex justify-items-center justify-center">
-    <footer>2025 — Made with SvelteKit</footer>
-  </div>
 </section>
 
 <style>

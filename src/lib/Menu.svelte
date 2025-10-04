@@ -3,8 +3,7 @@
   let isOpen = false;
 
   const links = [
-    { href: "/", text: "Home" },
-    // { href: "/blog", text: "Blog" },
+    { href: "/", text: "Blog" },
     { href: "/about", text: "About" },
   ];
 
