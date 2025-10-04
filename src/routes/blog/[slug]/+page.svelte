@@ -8,8 +8,8 @@
     const { slug } = params;
 
     try {
-      // Try to find the markdown file in blog/posts directory
-      const modules = import.meta.glob('/src/routes/blog/posts/*.md', { query: '?raw', import: 'default' });
+      // Try to find the markdown file in blog assets directory
+      const modules = import.meta.glob('/src/lib/assets/blog/*.md', { query: '?raw', import: 'default' });
 
       if (!modules) {
         throw error(404, 'No blog posts found');
@@ -40,20 +40,34 @@
       const content = await matchedFile() as string;
 
       // Parse frontmatter and content
-      let frontmatter: Record<string, string | string[]> = {};
+      let frontmatter: Record<string, string | string[] | number | boolean> = {};
       let markdownContent = content;
 
-      // Split by frontmatter markers
-      const parts = content.split(/^---\n([\s\S]*?)\n---\n/m);
+      // Simple and reliable frontmatter stripping
+      let frontmatterText = '';
+      let hasFrontmatter = false;
 
-      console.log('Split parts:', parts);
+      // Check if content starts with frontmatter marker
+      if (content.trimStart().startsWith('---')) {
+        const endMarkerIndex = content.indexOf('---', 3);
+        if (endMarkerIndex !== -1) {
+          frontmatterText = content.substring(3, endMarkerIndex).trim();
+          markdownContent = content.substring(endMarkerIndex + 3).trim();
+          hasFrontmatter = true;
+          console.log('Frontmatter found and stripped');
+        } else {
+          console.log('Frontmatter start found but no end marker');
+          markdownContent = content;
+        }
+      } else {
+        console.log('No frontmatter found');
+        markdownContent = content;
+      }
 
-      if (parts.length >= 3) {
-        const frontmatterText = parts[1];
-        markdownContent = parts[2];
+      console.log('Content preview:', content.substring(0, 200));
+      console.log('Markdown content preview:', markdownContent.substring(0, 100));
 
-        console.log('Frontmatter text:', frontmatterText);
-        console.log('Markdown content preview:', markdownContent.substring(0, 100));
+      if (hasFrontmatter && frontmatterText) {
 
         // Simple YAML-like parsing
         const lines = frontmatterText.split('\n');
@@ -66,14 +80,59 @@
 
             console.log('Processing line:', trimmedLine, '-> Key:', key, 'Value:', value);
 
-            // Remove quotes if present
-            if ((value.startsWith('"') && value.endsWith('"')) ||
-                (value.startsWith("'") && value.endsWith("'"))) {
-              value = value.slice(1, -1);
+            // Handle arrays (e.g., tags: ["tag1", "tag2"])
+            if (value.startsWith('[') && value.endsWith(']')) {
+              try {
+                // Remove brackets and split by comma
+                const arrayContent = value.slice(1, -1);
+                const items = arrayContent.split(',').map((item: string) => {
+                  const trimmed = item.trim();
+                  // Remove quotes if present
+                  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+                      (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+                    return trimmed.slice(1, -1);
+                  }
+                  return trimmed;
+                }).filter((item: string) => item.length > 0);
+                frontmatter[key] = items;
+              } catch (err) {
+                console.error('Error parsing array:', err);
+                frontmatter[key] = value;
+              }
             }
-
-            frontmatter[key] = value;
+            // Handle quoted strings
+            else if ((value.startsWith('"') && value.endsWith('"')) ||
+                     (value.startsWith("'") && value.endsWith("'"))) {
+              value = value.slice(1, -1);
+              frontmatter[key] = value;
+            }
+            // Handle boolean values
+            else if (value === 'true') {
+              frontmatter[key] = true;
+            }
+            else if (value === 'false') {
+              frontmatter[key] = false;
+            }
+            // Handle numbers
+            else if (!isNaN(Number(value))) {
+              frontmatter[key] = Number(value);
+            }
+            // Handle plain strings
+            else {
+              frontmatter[key] = value;
+            }
           }
+        }
+      } else {
+        // If frontmatter parsing failed, try to strip it manually
+        console.log('Frontmatter parsing failed, attempting manual strip');
+        const frontmatterEndIndex = content.indexOf('---', content.indexOf('---') + 3);
+        if (frontmatterEndIndex !== -1) {
+          markdownContent = content.substring(frontmatterEndIndex + 3).trim();
+          console.log('Manual strip successful, content preview:', markdownContent.substring(0, 100));
+        } else {
+          console.log('Manual strip also failed, using full content');
+          markdownContent = content;
         }
       }
 
@@ -154,36 +213,6 @@
     <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
       {frontmatter.title || 'Untitled'}
     </h1>
-
-    <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
-      <time datetime={frontmatter.date || ''}>
-        {#if frontmatter.date}
-          {new Date(frontmatter.date).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          })}
-        {:else}
-          No date
-        {/if}
-      </time>
-
-      {#if frontmatter.tags && frontmatter.tags.length > 0}
-        <div class="flex flex-wrap gap-2">
-          {#each frontmatter.tags as tag}
-            <span class="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded text-xs">
-              {tag}
-            </span>
-          {/each}
-        </div>
-      {/if}
-    </div>
-
-    {#if frontmatter.description}
-      <p class="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-        {frontmatter.description}
-      </p>
-    {/if}
   </header>
 
   <div class="prose prose-lg dark:prose-invert max-w-none
@@ -199,6 +228,30 @@
     prose-blockquote:text-gray-700 dark:prose-blockquote:text-gray-300">
     <Exmarkdown md={content} />
   </div>
+
+  <footer class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+    <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+      {#if frontmatter.date}
+        <time datetime={frontmatter.date}>
+          Published on {new Date(frontmatter.date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })}
+        </time>
+      {/if}
+
+      {#if frontmatter.tags && frontmatter.tags.length > 0}
+        <div class="flex flex-wrap gap-2">
+          {#each frontmatter.tags as tag}
+            <span class="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded text-xs">
+              {tag}
+            </span>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  </footer>
 </article>
 
 <style>

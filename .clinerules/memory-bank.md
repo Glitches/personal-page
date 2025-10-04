@@ -18,28 +18,57 @@
 
 ## Project Structure
 ```
+build/              # Build output directory
+e2e/                # End-to-end tests
+├── demo.test.ts
+
 src/
-├── app.css          # Global styles
+├── app.css         # Global styles (Tailwind CSS)
 ├── app.d.ts        # TypeScript declarations
 ├── app.html        # HTML template
+├── demo.spec.ts    # Demo test file
 ├── lib/            # Shared components/utilities
 │   ├── index.ts    # Library exports
 │   ├── Menu.svelte # Navigation component
-│   └── utils.ts    # Utility functions
-└── routes/         # Application routes
-    ├── +layout.svelte
-    ├── +page.svelte
+│   ├── utils.ts    # Utility functions
+│   └── assets/     # Static assets
+│       ├── github.svg
+│       └── blog/   # Blog content and assets
+│           └── 2025-10-04-dotfiles.md
+└── routes/         # Application routes (SvelteKit file-based routing)
+    ├── +layout.svelte      # Root layout
+    ├── +page.svelte        # Home page
+    ├── 2025-10-04-test-post.md # Test blog post (markdown route)
     ├── about/
+    │   └── +page.svelte    # About page
     └── blog/
-        ├── posts/  # Blog content
-        └── [slug]/ # Dynamic blog routes
+        ├── [slug]/         # Dynamic blog post routes
+        │   └── +page.svelte
+        └── posts/          # Blog posts directory
 
-static/             # Static assets
-├── logo.svg
+static/             # Static assets (served at root)
+├── ai.txt          # AI crawler instructions
+├── logo.svg        # Site logo
 ├── manifest.json   # PWA manifest
-├── robots.txt
-├── sitemap.xml
-└── ai.txt          # AI crawler instructions
+├── robots.txt      # SEO robots file
+└── sitemap.xml     # Site map for SEO
+
+Root level:
+├── .clinerules/    # Project rules and documentation
+├── .gitignore
+├── .prettierrc     # Prettier configuration
+├── docker-compose.yaml
+├── eslint.config.js
+├── Makefile        # Build automation
+├── netlify.toml    # Netlify deployment config
+├── package.json    # Node.js dependencies
+├── package-lock.json
+├── playwright.config.ts # E2E testing config
+├── README.md
+├── svelte.config.js    # SvelteKit configuration
+├── tailwind.config.js  # Tailwind CSS configuration
+├── tsconfig.json       # TypeScript configuration
+└── vite.config.ts      # Vite build configuration
 ```
 
 ## Content Management
@@ -59,11 +88,17 @@ static/             # Static assets
 - **Publish directory**: `build`
 
 ## Recent Changes
-- Initialized memory bank tracking system
+- Updated memory bank with current project structure
+- Added blog workflow documentation (`.clinerules/blog-workflow.md`)
+- Added component documentation (`.clinerules/components.md`)
+- Created test blog posts:
+  - `2025-10-04-test-post.md` (markdown route)
+  - `2025-10-04-dotfiles.md` (blog asset)
 - Project uses modern web technologies (SvelteKit, TypeScript, Tailwind)
+- Configured comprehensive project structure with proper file organization
 
 ## TODO
-- [ ] Document blog post creation workflow
+- [x] Document blog post creation workflow (`.clinerules/blog-workflow.md`)
 - [ ] Add deployment checklist
-- [ ] Track custom components and their usage
+- [x] Track custom components and their usage (`.clinerules/components.md`)
 - [ ] Document environment variables if any

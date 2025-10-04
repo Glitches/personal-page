@@ -59,7 +59,7 @@
     display: block;
     height: 3px;
     width: 100%;
-    background-color: white;
+    background-color: #ffffff;
     transition: all 0.3s ease;
   }
 
@@ -92,7 +92,7 @@
 
   .menu-link {
     color: white;
-    text-align: end;
+    text-align: center;
     text-decoration: none;
     font-size: 1.125rem;
     font-weight: bold;
