@@ -1,6 +1,9 @@
 <script lang="ts">
   import Menu from "$lib/Menu.svelte";
   import Markdown from "svelte-exmarkdown";
+  import hljs from "highlight.js";
+  import "highlight.js/styles/github.css";
+  import { onMount } from "svelte";
 
   // Import all markdown files
   const modules = import.meta.glob("../lib/assets/blog/*.md", { query: "raw" });
@@ -26,6 +29,15 @@
     }),
   ).then((results) => {
     posts = results.sort((a, b) => b.date.getTime() - a.date.getTime());
+  });
+
+  // Apply syntax highlighting after component mounts (client-side only)
+  onMount(() => {
+    setTimeout(() => {
+      document.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block as HTMLElement);
+      });
+    }, 100);
   });
 </script>
 
@@ -70,6 +82,7 @@
                 {@render children?.()}
               </h2>
             {/snippet}
+
             </Markdown>
           </div>
         </article>
@@ -79,13 +92,54 @@
 </div>
 
 <style>
-  @reference "tailwindcss/theme";
   :global(html) {
-    background-color: theme(--color-gray-100);
+    background-color: #f3f4f6;
   }
 
   :global(.prose) {
     max-width: none;
+  }
+
+  :global(.prose pre) {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+
+  :global(.prose code) {
+    background-color: #f8f9fa;
+    padding: 0.125rem 0.25rem;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875em;
+  }
+
+  :global(.prose pre code) {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  :global(.prose pre[class*="language-"]) {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    position: relative;
+  }
+
+  :global(.prose code[class*="language-"]) {
+    background-color: rgba(27, 31, 35, 0.05);
+    padding: 0.125rem 0.25rem;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875em;
+    color: #24292e;
   }
   
   .heading-h1 {

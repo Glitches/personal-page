@@ -1,27 +1,54 @@
-# sv
+# Personal Page
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A personal website and blog built with SvelteKit, featuring a clean design with Tailwind CSS and Docker containerization for easy deployment.
 
-## Creating a project
+## Project Overview
 
-If you're seeing this, you've probably already done this step. Congrats!
+This is a personal website and blog built with SvelteKit, featuring:
+- **Blog functionality** with markdown post support
+- **Responsive design** powered by Tailwind CSS
+- **Docker containerization** for easy deployment
+- **Modern tooling** with TypeScript, ESLint, and Prettier
+- **Testing setup** with Playwright for end-to-end tests
+
+## Development
+
+### Using Docker (Recommended)
+
+The project includes a complete Docker setup for development and deployment:
 
 ```bash
-# create a new project in the current directory
-npx sv create
+# Build and start all services
+make build up
 
-# create a new project in my-app
-npx sv create my-app
+# Start services (after build)
+make start
+
+# Stop services
+make stop
+
+# View logs and access container
+make shell
+
+# Restart services
+make restart
+
+# Run development server in container
+make dev
 ```
 
-## Developing
+### Local Development
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+For local development without Docker:
 
 ```bash
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
 
-# or start the server and open the app in a new browser tab
+# Or start the server and open the app in a new browser tab
 npm run dev -- --open
 ```
 
@@ -30,9 +57,20 @@ npm run dev -- --open
 To create a production version of your app:
 
 ```bash
+# Build using Docker
+make build
+
+# Or build locally
 npm run build
 ```
 
 You can preview the production build with `npm run preview`.
+
+## Deployment
+
+The project includes configurations for:
+- **Netlify** (`netlify.toml`)
+- **Docker** deployment ready
+- **Static site** generation support
 
 > To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.

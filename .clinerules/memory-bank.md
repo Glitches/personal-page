@@ -55,7 +55,7 @@ static/             # Static assets
 
 ## Deployment
 - **Platform**: Netlify
-- **Build command**: `npm run build`
+- **Build command**: `make build`
 - **Publish directory**: `build`
 
 ## Recent Changes
