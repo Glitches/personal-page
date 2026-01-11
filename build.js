@@ -345,6 +345,40 @@ ${rssItems}
   fs.writeFileSync(path.join(DIST_DIR, 'feed.xml'), rssFeed);
 }
 
+// Build sitemap.xml
+function buildSitemap(posts) {
+  const now = new Date().toISOString();
+  
+  // Homepage entry
+  const homepage = `    <url>
+      <loc>${SITE_CONFIG.url}/</loc>
+      <lastmod>${now}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>1.0</priority>
+    </url>`;
+  
+  // Post entries
+  const postUrls = posts.map(post => {
+    const postUrl = `${SITE_CONFIG.url}/${post.slug}.html`;
+    const lastmod = post.parsedDate ? post.parsedDate.toISOString() : now;
+    
+    return `    <url>
+      <loc>${postUrl}</loc>
+      <lastmod>${lastmod}</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.8</priority>
+    </url>`;
+  }).join('\n');
+  
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${homepage}
+${postUrls}
+</urlset>`;
+  
+  fs.writeFileSync(path.join(DIST_DIR, 'sitemap.xml'), sitemap);
+}
+
 // Escape XML special characters
 function escapeXml(text) {
   if (!text) return '';
@@ -378,10 +412,11 @@ function build() {
   const posts = markdownFiles.map(buildPost);
   buildIndex(posts);
   buildRSSFeed(posts);
+  buildSitemap(posts);
   copyAssets();
   
   console.log('Build complete!');
-  console.log(`Generated ${posts.length} post(s) and RSS feed`);
+  console.log(`Generated ${posts.length} post(s), RSS feed, and sitemap`);
 }
 
 build();
