@@ -10,10 +10,10 @@
 
 ## Medium Priority
 
-- [ ] **Sitemap.xml** - Auto-generate sitemap with all posts for SEO
-- [ ] **Reading Time Estimate** - Calculate from word count and display on post pages
-- [ ] **Post Drafts Support** - Skip posts with `draft: true` in frontmatter
-- [ ] **Better Error Handling** - Handle missing files, malformed frontmatter, graceful failures
+- [x] **Sitemap.xml** - Auto-generate sitemap with all posts for SEO
+- [x] **Reading Time Estimate** - Calculate from word count and display on post pages
+- [x] **Post Drafts Support** - Skip posts with `draft: true` in frontmatter
+- [x] **Better Error Handling** - Handle missing files, malformed frontmatter, graceful failures
 - [x] **404 Page** - Custom 404.html for missing pages
 
 ## Nice to Have
