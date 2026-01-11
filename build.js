@@ -226,7 +226,8 @@ function buildPost(fileInfo) {
   let postHtml = postTemplate
     .replace('{{TITLE}}', escapeHtml(title))
     .replace('{{DATE}}', date)
-    .replace('{{CONTENT}}', htmlContent);
+    .replace('{{CONTENT}}', htmlContent)
+    .replace('{{SITE_TITLE}}', escapeHtml(SITE_CONFIG.title));
   postHtml = postHtml.replace('{{META_TAGS}}', metaTags);
   
   const outputPath = path.join(DIST_DIR, `${fileInfo.slug}.html`);

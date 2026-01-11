@@ -40,6 +40,17 @@ header nav a:hover {
   text-decoration: underline;
 }
 
+header nav .home-link {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+header nav .home-link:hover {
+  color: #0066cc;
+  text-decoration: none;
+}
+
 /* Main Content */
 main {
   margin-bottom: 3rem;
