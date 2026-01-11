@@ -131,15 +131,7 @@ function buildPost(fileInfo) {
   const date = metadata.date ? `<time class="post-date">${metadata.date}</time>` : '';
   const excerpt = extractExcerpt(content, metadata);
   
-  const postHtml = postTemplate
-    .replace('{{TITLE}}', escapeHtml(title))
-    .replace('{{DATE}}', date)
-    .replace('{{CONTENT}}', htmlContent);
-  
-  const outputPath = path.join(DIST_DIR, `${fileInfo.slug}.html`);
-  fs.writeFileSync(outputPath, postHtml);
-  
-  return {
+  const postData = {
     slug: fileInfo.slug,
     title: title,
     date: metadata.date || '',
@@ -147,6 +139,63 @@ function buildPost(fileInfo) {
     excerpt: excerpt,
     filename: fileInfo.filename
   };
+  
+  const metaTags = generateMetaTags('post', postData);
+  let postHtml = postTemplate
+    .replace('{{TITLE}}', escapeHtml(title))
+    .replace('{{DATE}}', date)
+    .replace('{{CONTENT}}', htmlContent);
+  postHtml = postHtml.replace('{{META_TAGS}}', metaTags);
+  
+  const outputPath = path.join(DIST_DIR, `${fileInfo.slug}.html`);
+  fs.writeFileSync(outputPath, postHtml);
+  
+  return postData;
+}
+
+// Generate SEO meta tags
+function generateMetaTags(type, data = {}) {
+  const tags = [];
+  
+  if (type === 'index') {
+    tags.push(`  <meta name="description" content="${escapeHtml(SITE_CONFIG.description)}">`);
+    tags.push(`  <link rel="canonical" href="${SITE_CONFIG.url}/">`);
+    
+    // Open Graph tags
+    tags.push(`  <meta property="og:type" content="website">`);
+    tags.push(`  <meta property="og:title" content="${escapeHtml(SITE_CONFIG.title)}">`);
+    tags.push(`  <meta property="og:description" content="${escapeHtml(SITE_CONFIG.description)}">`);
+    tags.push(`  <meta property="og:url" content="${SITE_CONFIG.url}/">`);
+    tags.push(`  <meta property="og:site_name" content="${escapeHtml(SITE_CONFIG.title)}">`);
+    
+    // Twitter Card tags
+    tags.push(`  <meta name="twitter:card" content="summary">`);
+    tags.push(`  <meta name="twitter:title" content="${escapeHtml(SITE_CONFIG.title)}">`);
+    tags.push(`  <meta name="twitter:description" content="${escapeHtml(SITE_CONFIG.description)}">`);
+  } else if (type === 'post') {
+    const postUrl = `${SITE_CONFIG.url}/${data.slug}.html`;
+    const description = data.excerpt || SITE_CONFIG.description;
+    
+    tags.push(`  <meta name="description" content="${escapeHtml(description)}">`);
+    tags.push(`  <link rel="canonical" href="${postUrl}">`);
+    
+    // Open Graph tags
+    tags.push(`  <meta property="og:type" content="article">`);
+    tags.push(`  <meta property="og:title" content="${escapeHtml(data.title)}">`);
+    tags.push(`  <meta property="og:description" content="${escapeHtml(description)}">`);
+    tags.push(`  <meta property="og:url" content="${postUrl}">`);
+    tags.push(`  <meta property="og:site_name" content="${escapeHtml(SITE_CONFIG.title)}">`);
+    if (data.dateRaw) {
+      tags.push(`  <meta property="article:published_time" content="${new Date(data.dateRaw).toISOString()}">`);
+    }
+    
+    // Twitter Card tags
+    tags.push(`  <meta name="twitter:card" content="summary">`);
+    tags.push(`  <meta name="twitter:title" content="${escapeHtml(data.title)}">`);
+    tags.push(`  <meta name="twitter:description" content="${escapeHtml(description)}">`);
+  }
+  
+  return tags.join('\n');
 }
 
 // Build index page
@@ -161,7 +210,11 @@ function buildIndex(posts) {
     `;
   }).join('\n');
   
-  const indexHtml = indexTemplate.replace('{{POSTS}}', postsList);
+  const metaTags = generateMetaTags('index');
+  let indexHtml = indexTemplate.replace('{{POSTS}}', postsList);
+  indexHtml = indexHtml.replace('{{META_TAGS}}', metaTags);
+  indexHtml = indexHtml.replace('{{TITLE}}', escapeHtml(SITE_CONFIG.title));
+  
   fs.writeFileSync(path.join(DIST_DIR, 'index.html'), indexHtml);
 }
 
