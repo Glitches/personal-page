@@ -34,8 +34,24 @@
 
 ## User Data Required
 
-- **Logo/Image**: If you want to add a logo image to the home link, you can:
-  1. Add your logo image to a `static/` or `assets/` folder
-  2. Update `build.js` to copy images to `dist/`
-  3. Update `templates/post.html` to include an `<img>` tag in the home link
-  4. Update CSS to style the logo appropriately
+### Placeholder Data That Needs Real Content
+
+1. **Author Bio & Avatar**:
+   - Update `SITE_AUTHOR_BIO` environment variable or edit `build.js` with your actual bio
+   - Add your avatar image and set `SITE_AUTHOR_AVATAR` environment variable (e.g., `avatar.jpg`)
+   - If no avatar is provided, a placeholder with initial letter is shown
+   - Location: `build.js` - `SITE_CONFIG.authorBio` and `SITE_CONFIG.authorAvatar`
+
+2. **Site Configuration**:
+   - Update `SITE_TITLE` - Your blog title
+   - Update `SITE_URL` - Your actual domain URL
+   - Update `SITE_DESCRIPTION` - Your blog description
+   - Update `SITE_AUTHOR` - Your name
+   - Location: `build.js` or set via environment variables
+
+3. **Logo/Image** (Optional):
+   - If you want to add a logo image to the home link:
+     1. Add your logo image to a `static/` or `assets/` folder
+     2. Update `build.js` to copy images to `dist/`
+     3. Update `templates/post.html` to include an `<img>` tag in the home link
+     4. Update CSS to style the logo appropriately

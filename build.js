@@ -11,7 +11,9 @@ const SITE_CONFIG = {
   title: process.env.SITE_TITLE || 'My Personal Blog',
   url: process.env.SITE_URL || 'https://example.com',
   description: process.env.SITE_DESCRIPTION || 'A personal blog',
-  author: process.env.SITE_AUTHOR || 'Author Name'
+  author: process.env.SITE_AUTHOR || 'Author Name',
+  authorBio: process.env.SITE_AUTHOR_BIO || 'Placeholder bio text - update with your actual bio in build.js or via SITE_AUTHOR_BIO environment variable.',
+  authorAvatar: process.env.SITE_AUTHOR_AVATAR || '' // Path to avatar image (e.g., 'avatar.jpg')
 };
 
 // Ensure dist directory exists
@@ -396,6 +398,31 @@ function generateMetaTags(type, data = {}) {
   return tags.join('\n');
 }
 
+// Generate author bio HTML
+function generateAuthorBio() {
+  if (!SITE_CONFIG.authorBio) {
+    return '';
+  }
+  
+  let bioHtml = '<section class="author-bio">';
+  
+  if (SITE_CONFIG.authorAvatar) {
+    bioHtml += `<img src="${SITE_CONFIG.authorAvatar}" alt="${escapeHtml(SITE_CONFIG.author)}" class="author-avatar" />`;
+  } else {
+    // Placeholder avatar - user should replace with actual image
+    bioHtml += `<div class="author-avatar placeholder">${escapeHtml(SITE_CONFIG.author.charAt(0).toUpperCase())}</div>`;
+  }
+  
+  bioHtml += `<div class="author-info">
+    <h2>About ${escapeHtml(SITE_CONFIG.author)}</h2>
+    <p>${escapeHtml(SITE_CONFIG.authorBio)}</p>
+  </div>`;
+  
+  bioHtml += '</section>';
+  
+  return bioHtml;
+}
+
 // Build index page
 function buildIndex(posts) {
   const postsList = posts.map(post => {
@@ -411,7 +438,9 @@ function buildIndex(posts) {
   }).join('\n');
   
   const metaTags = generateMetaTags('index');
+  const authorBio = generateAuthorBio();
   let indexHtml = indexTemplate.replace('{{POSTS}}', postsList);
+  indexHtml = indexHtml.replace('{{AUTHOR_BIO}}', authorBio);
   indexHtml = indexHtml.replace('{{META_TAGS}}', metaTags);
   indexHtml = indexHtml.replace(/\{\{TITLE\}\}/g, escapeHtml(SITE_CONFIG.title));
   
