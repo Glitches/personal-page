@@ -224,7 +224,7 @@ function buildPost(fileInfo) {
   
   const metaTags = generateMetaTags('post', postData);
   let postHtml = postTemplate
-    .replace('{{TITLE}}', escapeHtml(title))
+    .replace(/\{\{TITLE\}\}/g, escapeHtml(title))
     .replace('{{DATE}}', date)
     .replace('{{CONTENT}}', htmlContent)
     .replace('{{SITE_TITLE}}', escapeHtml(SITE_CONFIG.title));
@@ -298,7 +298,7 @@ function buildIndex(posts) {
   const metaTags = generateMetaTags('index');
   let indexHtml = indexTemplate.replace('{{POSTS}}', postsList);
   indexHtml = indexHtml.replace('{{META_TAGS}}', metaTags);
-  indexHtml = indexHtml.replace('{{TITLE}}', escapeHtml(SITE_CONFIG.title));
+  indexHtml = indexHtml.replace(/\{\{TITLE\}\}/g, escapeHtml(SITE_CONFIG.title));
   
   fs.writeFileSync(path.join(DIST_DIR, 'index.html'), indexHtml);
 }
