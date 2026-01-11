@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Archive - {{SITE_TITLE}}</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="feed.xml">
+  <meta name="description" content="Complete archive of all blog posts">
+  <link rel="canonical" href="{{SITE_URL}}/archive.html">
+</head>
+<body>
+  <header>
+    <h1><a href="index.html" class="home-link">{{SITE_TITLE}}</a></h1>
+    <nav>
+      <a href="index.html">Home</a> | <a href="archive.html">Archive</a> | <a href="tags.html">Tags</a>
+    </nav>
+  </header>
+  <main>
+    <article>
+      <h1>Archive</h1>
+      <p>All posts in chronological order:</p>
+      {{ARCHIVE_LIST}}
+    </article>
+  </main>
+  <footer>
+    <p>&copy; 2024</p>
+  </footer>
+</body>
+</html>

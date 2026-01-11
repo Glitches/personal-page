@@ -413,6 +413,83 @@ function buildIndex(posts) {
   fs.writeFileSync(path.join(DIST_DIR, 'index.html'), indexHtml);
 }
 
+// Build archive page
+function buildArchivePage(posts) {
+  if (!templateArchive) {
+    return; // Skip if template doesn't exist
+  }
+  
+  try {
+    // Group posts by year and month
+    const archiveByYear = {};
+    
+    posts.forEach(post => {
+      if (!post.parsedDate) return;
+      
+      const year = post.parsedDate.getFullYear();
+      const month = post.parsedDate.toLocaleDateString('en-US', { month: 'long' });
+      
+      if (!archiveByYear[year]) {
+        archiveByYear[year] = {};
+      }
+      if (!archiveByYear[year][month]) {
+        archiveByYear[year][month] = [];
+      }
+      
+      archiveByYear[year][month].push(post);
+    });
+    
+    // Build archive HTML
+    const years = Object.keys(archiveByYear).sort((a, b) => b - a); // Newest first
+    
+    if (years.length === 0) {
+      const archiveList = '<p>No posts available yet.</p>';
+      let archiveHtml = templateArchive
+        .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
+        .replace('{{SITE_URL}}', SITE_CONFIG.url)
+        .replace('{{ARCHIVE_LIST}}', archiveList);
+      fs.writeFileSync(path.join(DIST_DIR, 'archive.html'), archiveHtml);
+      return;
+    }
+    
+    const archiveList = years.map(year => {
+      const months = Object.keys(archiveByYear[year]).sort((a, b) => {
+        const monthOrder = ['January', 'February', 'March', 'April', 'May', 'June', 
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+        return monthOrder.indexOf(a) - monthOrder.indexOf(b);
+      }).reverse(); // Newest month first
+      
+      const monthSections = months.map(month => {
+        const monthPosts = archiveByYear[year][month];
+        const postsList = monthPosts.map(post => {
+          return `        <li><a href="${post.slug}.html">${escapeHtml(post.title)}</a> <time class="post-date">${post.date}</time></li>`;
+        }).join('\n');
+        
+        return `      <section class="archive-month">
+        <h3>${month}</h3>
+        <ul class="archive-posts">
+${postsList}
+        </ul>
+      </section>`;
+      }).join('\n\n');
+      
+      return `      <section class="archive-year">
+        <h2>${year}</h2>
+${monthSections}
+      </section>`;
+    }).join('\n\n');
+    
+    let archiveHtml = templateArchive
+      .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
+      .replace('{{SITE_URL}}', SITE_CONFIG.url)
+      .replace('{{ARCHIVE_LIST}}', archiveList);
+    
+    fs.writeFileSync(path.join(DIST_DIR, 'archive.html'), archiveHtml);
+  } catch (error) {
+    console.warn('Warning: Could not generate archive page:', error.message);
+  }
+}
+
 // Build tags page
 function buildTagsPage(posts) {
   if (!templateTags) {
@@ -621,6 +698,7 @@ function build() {
       buildRSSFeed(posts);
       buildSitemap(posts);
       buildTagsPage(posts);
+      buildArchivePage(posts);
       build404Page();
       copyAssets();
     } catch (error) {

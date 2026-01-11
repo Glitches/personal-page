@@ -196,6 +196,61 @@ main {
   margin-left: 0.5rem;
 }
 
+/* Archive Page */
+.archive-year {
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 2px solid #ddd;
+}
+
+.archive-year:last-child {
+  border-bottom: none;
+}
+
+.archive-year h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.archive-month {
+  margin-bottom: 2rem;
+  margin-left: 1rem;
+}
+
+.archive-month h3 {
+  font-size: 1.4rem;
+  margin-bottom: 0.75rem;
+  color: #555;
+}
+
+.archive-posts {
+  list-style: none;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.archive-posts li {
+  margin-bottom: 0.5rem;
+  padding-left: 0;
+}
+
+.archive-posts li a {
+  color: #333;
+  text-decoration: none;
+}
+
+.archive-posts li a:hover {
+  color: #0066cc;
+  text-decoration: underline;
+}
+
+.archive-posts li time {
+  color: #666;
+  font-size: 0.9rem;
+  margin-left: 0.5rem;
+}
+
 .post-content {
   line-height: 1.8;
 }
