@@ -413,29 +413,57 @@ p code,
 li code,
 td code {
   background-color: var(--code-bg);
-  padding: 0.2em 0.4em;
-  border-radius: 3px;
+  padding: 0.25em 0.5em;
+  border-radius: 4px;
   color: #d14;
+  font-size: 0.9em;
+  border: 1px solid var(--border-color);
 }
 
 /* Code blocks */
 pre {
   background-color: var(--code-bg);
   border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 1em;
+  border-radius: 6px;
+  padding: 1.25em;
   overflow-x: auto;
-  margin-bottom: 1em;
-  line-height: 1.5;
+  margin-bottom: 1.5em;
+  margin-top: 1em;
+  line-height: 1.6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 pre code {
   background-color: transparent;
   padding: 0;
   border-radius: 0;
-  color: #333;
+  color: var(--text-color);
   display: block;
   white-space: pre;
+  font-size: 0.9em;
+}
+
+/* Language-specific code block hints (via class) */
+pre code.language-javascript,
+pre code.language-js {
+  color: #e0e0e0;
+}
+
+pre code.language-css {
+  color: #e0e0e0;
+}
+
+pre code.language-html {
+  color: #e0e0e0;
+}
+
+pre code.language-bash,
+pre code.language-shell {
+  color: #e0e0e0;
+}
+
+body:not(:has(#dark-mode-checkbox:checked)) pre code {
+  color: #333;
 }
 
 /* Tables */
