@@ -202,10 +202,12 @@ function generateMetaTags(type, data = {}) {
 function buildIndex(posts) {
   const postsList = posts.map(post => {
     const dateStr = post.date ? `<time class="post-date">${post.date}</time>` : '';
+    const excerptStr = post.excerpt ? `<p class="post-excerpt">${escapeHtml(post.excerpt)}</p>` : '';
     return `
       <article class="post-preview">
         <h2><a href="${post.slug}.html">${escapeHtml(post.title)}</a></h2>
         ${dateStr}
+        ${excerptStr}
       </article>
     `;
   }).join('\n');
