@@ -340,7 +340,8 @@ function buildPost(fileInfo) {
       .replace('{{READING_TIME}}', readingTimeHtml)
       .replace('{{TAGS}}', tagsHtml)
       .replace('{{CONTENT}}', htmlContent)
-      .replace('{{SITE_TITLE}}', escapeHtml(SITE_CONFIG.title));
+      .replace('{{SITE_TITLE}}', escapeHtml(SITE_CONFIG.title))
+      .replace('{{YEAR}}', new Date().getFullYear());
     postHtml = postHtml.replace('{{META_TAGS}}', metaTags);
     
     const outputPath = path.join(DIST_DIR, `${fileInfo.slug}.html`);
@@ -443,6 +444,7 @@ function buildIndex(posts) {
   indexHtml = indexHtml.replace('{{AUTHOR_BIO}}', authorBio);
   indexHtml = indexHtml.replace('{{META_TAGS}}', metaTags);
   indexHtml = indexHtml.replace(/\{\{TITLE\}\}/g, escapeHtml(SITE_CONFIG.title));
+  indexHtml = indexHtml.replace('{{YEAR}}', new Date().getFullYear());
   
   fs.writeFileSync(path.join(DIST_DIR, 'index.html'), indexHtml);
 }
@@ -481,7 +483,8 @@ function buildArchivePage(posts) {
       let archiveHtml = templateArchive
         .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
         .replace('{{SITE_URL}}', SITE_CONFIG.url)
-        .replace('{{ARCHIVE_LIST}}', archiveList);
+        .replace('{{ARCHIVE_LIST}}', archiveList)
+        .replace('{{YEAR}}', new Date().getFullYear());
       fs.writeFileSync(path.join(DIST_DIR, 'archive.html'), archiveHtml);
       return;
     }
@@ -516,7 +519,8 @@ ${monthSections}
     let archiveHtml = templateArchive
       .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
       .replace('{{SITE_URL}}', SITE_CONFIG.url)
-      .replace('{{ARCHIVE_LIST}}', archiveList);
+      .replace('{{ARCHIVE_LIST}}', archiveList)
+      .replace('{{YEAR}}', new Date().getFullYear());
     
     fs.writeFileSync(path.join(DIST_DIR, 'archive.html'), archiveHtml);
   } catch (error) {
@@ -553,7 +557,8 @@ function buildTagsPage(posts) {
       let tagsHtml = templateTags
         .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
         .replace('{{SITE_URL}}', SITE_CONFIG.url)
-        .replace('{{TAGS_LIST}}', tagsList);
+        .replace('{{TAGS_LIST}}', tagsList)
+        .replace('{{YEAR}}', new Date().getFullYear());
       fs.writeFileSync(path.join(DIST_DIR, 'tags.html'), tagsHtml);
       return;
     }
@@ -577,7 +582,8 @@ ${postsList}
     let tagsHtml = templateTags
       .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
       .replace('{{SITE_URL}}', SITE_CONFIG.url)
-      .replace('{{TAGS_LIST}}', tagsList);
+      .replace('{{TAGS_LIST}}', tagsList)
+      .replace('{{YEAR}}', new Date().getFullYear());
     
     fs.writeFileSync(path.join(DIST_DIR, 'tags.html'), tagsHtml);
   } catch (error) {
@@ -636,7 +642,8 @@ function build404Page() {
   try {
     let page404 = template404
       .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
-      .replace('{{SITE_URL}}', SITE_CONFIG.url);
+      .replace('{{SITE_URL}}', SITE_CONFIG.url)
+      .replace('{{YEAR}}', new Date().getFullYear());
     
     fs.writeFileSync(path.join(DIST_DIR, '404.html'), page404);
   } catch (error) {
