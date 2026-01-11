@@ -34,6 +34,11 @@ try {
 } catch (error) {
   // Tags template is optional
 }
+try {
+  templateArchive = fs.readFileSync(path.join(TEMPLATES_DIR, 'archive.html'), 'utf8');
+} catch (error) {
+  // Archive template is optional
+}
 
 // Configure marked for code blocks
 marked.setOptions({
