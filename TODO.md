@@ -3,10 +3,10 @@
 ## High Priority
 
 - [x] **RSS Feed** - Generate feed.xml with post metadata (essential for personal blogs)
-- [ ] **SEO Meta Tags** - Add meta description, Open Graph tags, canonical URLs, proper title tags
-- [ ] **Post Excerpts on Index** - Show first paragraph or excerpt from frontmatter for better previews
-- [ ] **Proper Date Parsing & Sorting** - Parse dates from frontmatter/filename, sort by actual date, support ISO dates
-- [ ] **Home Link on Post Pages** - Add site title/logo linking to index for better navigation
+- [x] **SEO Meta Tags** - Add meta description, Open Graph tags, canonical URLs, proper title tags
+- [x] **Post Excerpts on Index** - Show first paragraph or excerpt from frontmatter for better previews
+- [x] **Proper Date Parsing & Sorting** - Parse dates from frontmatter/filename, sort by actual date, support ISO dates
+- [x] **Home Link on Post Pages** - Add site title/logo linking to index for better navigation
 
 ## Medium Priority
 
@@ -31,3 +31,11 @@
 - Items are organized by priority
 - Check off items as they are completed
 - Feel free to add new items or adjust priorities as needed
+
+## User Data Required
+
+- **Logo/Image**: If you want to add a logo image to the home link, you can:
+  1. Add your logo image to a `static/` or `assets/` folder
+  2. Update `build.js` to copy images to `dist/`
+  3. Update `templates/post.html` to include an `<img>` tag in the home link
+  4. Update CSS to style the logo appropriately
