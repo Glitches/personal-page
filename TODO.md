@@ -18,11 +18,11 @@
 
 ## Nice to Have
 
-- [ ] **Tags/Categories** - Optional tags in frontmatter, tag pages or filter on index
-- [ ] **Archive Page** - Chronological list of all posts
-- [ ] **Dark Mode Toggle** - CSS-only implementation
-- [ ] **Better Code Block Styling** - Improve contrast and spacing, optional CSS-only syntax highlighting hints
-- [ ] **Author/Bio Section** - Optional author info in templates
+- [x] **Tags/Categories** - Optional tags in frontmatter, tag pages or filter on index
+- [x] **Archive Page** - Chronological list of all posts
+- [x] **Dark Mode Toggle** - CSS-only implementation
+- [x] **Better Code Block Styling** - Improve contrast and spacing, optional CSS-only syntax highlighting hints
+- [x] **Author/Bio Section** - Optional author info in templates
 
 ---
 
