@@ -5,21 +5,112 @@
   box-sizing: border-box;
 }
 
+:root {
+  --bg-color: #fff;
+  --text-color: #333;
+  --border-color: #e0e0e0;
+  --code-bg: #f5f5f5;
+  --link-color: #0066cc;
+  --header-border: #e0e0e0;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   line-height: 1.6;
-  color: #333;
-  background-color: #fff;
+  color: var(--text-color);
+  background-color: var(--bg-color);
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Dark Mode */
+#dark-mode-checkbox {
+  display: none;
+}
+
+.dark-mode-toggle {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  border-radius: 24px;
+  transition: 0.3s;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+#dark-mode-checkbox:checked + .toggle-slider {
+  background-color: #4CAF50;
+}
+
+#dark-mode-checkbox:checked + .toggle-slider:before {
+  transform: translateX(26px);
+}
+
+/* Dark mode styles */
+body:has(#dark-mode-checkbox:checked) {
+  --bg-color: #1a1a1a;
+  --text-color: #e0e0e0;
+  --border-color: #444;
+  --code-bg: #2a2a2a;
+  --link-color: #4a9eff;
+  --header-border: #444;
+}
+
+body:has(#dark-mode-checkbox:checked) code {
+  background-color: var(--code-bg);
+  color: #e0e0e0;
+}
+
+body:has(#dark-mode-checkbox:checked) pre {
+  background-color: var(--code-bg);
+  border-color: var(--border-color);
+}
+
+body:has(#dark-mode-checkbox:checked) pre code {
+  color: #e0e0e0;
+}
+
+body:has(#dark-mode-checkbox:checked) .post-tags .tag {
+  background-color: #333;
+  color: #e0e0e0;
+}
+
+body:has(#dark-mode-checkbox:checked) .post-tags .tag:hover {
+  background-color: #444;
 }
 
 /* Header */
 header {
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--header-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 header h1 {
@@ -31,8 +122,14 @@ header nav {
   margin-top: 1rem;
 }
 
+header nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 header nav a {
-  color: #0066cc;
+  color: var(--link-color);
   text-decoration: none;
 }
 
@@ -43,11 +140,11 @@ header nav a:hover {
 header nav .home-link {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color);
 }
 
 header nav .home-link:hover {
-  color: #0066cc;
+  color: var(--link-color);
   text-decoration: none;
 }
 
@@ -60,7 +157,7 @@ main {
 .post-preview {
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .post-preview:last-child {
@@ -73,12 +170,12 @@ main {
 }
 
 .post-preview h2 a {
-  color: #333;
+  color: var(--text-color);
   text-decoration: none;
 }
 
 .post-preview h2 a:hover {
-  color: #0066cc;
+  color: var(--link-color);
 }
 
 .post-preview time {
@@ -279,7 +376,7 @@ p {
 }
 
 a {
-  color: #0066cc;
+  color: var(--link-color);
   text-decoration: none;
 }
 
@@ -297,7 +394,7 @@ li {
 }
 
 blockquote {
-  border-left: 4px solid #ddd;
+  border-left: 4px solid var(--border-color);
   padding-left: 1em;
   margin-left: 0;
   margin-bottom: 1em;
@@ -315,7 +412,7 @@ code {
 p code,
 li code,
 td code {
-  background-color: #f5f5f5;
+  background-color: var(--code-bg);
   padding: 0.2em 0.4em;
   border-radius: 3px;
   color: #d14;
@@ -323,8 +420,8 @@ td code {
 
 /* Code blocks */
 pre {
-  background-color: #f5f5f5;
-  border: 1px solid #ddd;
+  background-color: var(--code-bg);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   padding: 1em;
   overflow-x: auto;
@@ -350,12 +447,12 @@ table {
 
 th, td {
   padding: 0.5em;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   text-align: left;
 }
 
 th {
-  background-color: #f5f5f5;
+  background-color: var(--code-bg);
   font-weight: 600;
 }
 
@@ -370,7 +467,7 @@ img {
 /* Horizontal Rule */
 hr {
   border: none;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--border-color);
   margin: 2em 0;
 }
 
