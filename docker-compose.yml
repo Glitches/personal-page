@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # Build service - builds the static site
+  build:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./dist:/app/dist
+    command: npm run build
+    profiles:
+      - build
+
+  # Development service - watches for changes and rebuilds
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    command: npm run watch
+    profiles:
+      - dev
+
+  # Production build - just builds and exits
+  prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./dist:/app/dist
+    command: npm run build
+    profiles:
+      - prod
