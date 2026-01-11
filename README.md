@@ -81,6 +81,7 @@ Create markdown posts in the `posts/` folder:
 ---
 title: My Post Title
 date: January 15, 2024
+excerpt: Optional custom excerpt for RSS feed and previews
 ---
 
 Your markdown content here...
@@ -88,10 +89,33 @@ Your markdown content here...
 
 **Guidelines:**
 - Create `.md` files in the `posts/` folder
-- Use frontmatter for metadata (title, date)
+- Use frontmatter for metadata (title, date, excerpt)
 - Filename becomes the URL slug (e.g., `my-post.md` → `my-post.html`)
 - Posts are sorted by filename (newest first, alphabetical)
 - Frontmatter is optional - if omitted, the filename will be used as the title
+- `excerpt` is optional - if omitted, first paragraph will be used automatically
+
+## RSS Feed
+
+The blog automatically generates an RSS feed at `feed.xml`. The feed includes:
+- All published posts
+- Post titles, dates, and excerpts
+- Links to individual posts
+
+**Site Configuration:**
+
+Configure your site metadata via environment variables (or edit `build.js` directly):
+
+```bash
+export SITE_TITLE="My Personal Blog"
+export SITE_URL="https://yourdomain.com"
+export SITE_DESCRIPTION="A personal blog about..."
+export SITE_AUTHOR="Your Name"
+```
+
+Or set them in your deployment platform (Netlify, Vercel, etc.) as environment variables.
+
+The RSS feed link is automatically included in the HTML `<head>` of all pages.
 
 ## Code Blocks
 

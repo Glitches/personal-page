@@ -6,6 +6,14 @@ const POSTS_DIR = path.join(__dirname, 'posts');
 const DIST_DIR = path.join(__dirname, 'dist');
 const TEMPLATES_DIR = path.join(__dirname, 'templates');
 
+// Site configuration (can be overridden via environment variables)
+const SITE_CONFIG = {
+  title: process.env.SITE_TITLE || 'My Personal Blog',
+  url: process.env.SITE_URL || 'https://example.com',
+  description: process.env.SITE_DESCRIPTION || 'A personal blog',
+  author: process.env.SITE_AUTHOR || 'Author Name'
+};
+
 // Ensure dist directory exists
 if (!fs.existsSync(DIST_DIR)) {
   fs.mkdirSync(DIST_DIR, { recursive: true });
@@ -66,6 +74,53 @@ function getMarkdownFiles() {
     });
 }
 
+// Extract excerpt from markdown content (first paragraph or first 200 chars)
+function extractExcerpt(fullContent, metadata, maxLength = 200) {
+  // Try to get excerpt from frontmatter first
+  if (metadata.excerpt) {
+    return metadata.excerpt;
+  }
+  
+  // Otherwise extract from content
+  const { content } = parseFrontmatter(fullContent);
+  // Remove markdown syntax and get first paragraph
+  const plainText = content
+    .replace(/^#+\s+/gm, '') // Remove headers
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Convert links to text
+    .replace(/`([^`]+)`/g, '$1') // Remove inline code markers
+    .replace(/\*\*([^\*]+)\*\*/g, '$1') // Remove bold
+    .replace(/\*([^\*]+)\*/g, '$1') // Remove italic
+    .trim();
+  
+  // Get first paragraph or first maxLength characters
+  const firstParagraph = plainText.split('\n\n')[0] || plainText;
+  if (firstParagraph.length <= maxLength) {
+    return firstParagraph;
+  }
+  return firstParagraph.substring(0, maxLength).trim() + '...';
+}
+
+// Convert date string to RFC 822 format for RSS
+function formatRSSDate(dateString) {
+  if (!dateString) return new Date().toUTCString();
+  
+  try {
+    // Try parsing various date formats
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      // If parsing fails, try common formats
+      const isoMatch = dateString.match(/(\d{4})-(\d{2})-(\d{2})/);
+      if (isoMatch) {
+        return new Date(isoMatch[0]).toUTCString();
+      }
+      return new Date().toUTCString();
+    }
+    return date.toUTCString();
+  } catch (e) {
+    return new Date().toUTCString();
+  }
+}
+
 // Build a single post
 function buildPost(fileInfo) {
   const content = fs.readFileSync(fileInfo.path, 'utf8');
@@ -74,6 +129,7 @@ function buildPost(fileInfo) {
   const htmlContent = marked.parse(markdownContent);
   const title = metadata.title || fileInfo.slug;
   const date = metadata.date ? `<time class="post-date">${metadata.date}</time>` : '';
+  const excerpt = extractExcerpt(content, metadata);
   
   const postHtml = postTemplate
     .replace('{{TITLE}}', escapeHtml(title))
@@ -86,7 +142,9 @@ function buildPost(fileInfo) {
   return {
     slug: fileInfo.slug,
     title: title,
-    date: date,
+    date: metadata.date || '',
+    dateRaw: metadata.date || '',
+    excerpt: excerpt,
     filename: fileInfo.filename
   };
 }
@@ -115,6 +173,51 @@ function copyAssets() {
   }
 }
 
+// Build RSS feed
+function buildRSSFeed(posts) {
+  const rssItems = posts.map(post => {
+    const postUrl = `${SITE_CONFIG.url}/${post.slug}.html`;
+    const pubDate = formatRSSDate(post.dateRaw);
+    const description = escapeXml(post.excerpt);
+    const title = escapeXml(post.title);
+    
+    return `    <item>
+      <title>${title}</title>
+      <link>${postUrl}</link>
+      <guid isPermaLink="true">${postUrl}</guid>
+      <pubDate>${pubDate}</pubDate>
+      <description>${description}</description>
+    </item>`;
+  }).join('\n');
+  
+  const rssFeed = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>${escapeXml(SITE_CONFIG.title)}</title>
+    <link>${SITE_CONFIG.url}</link>
+    <description>${escapeXml(SITE_CONFIG.description)}</description>
+    <language>en</language>
+    <managingEditor>${escapeXml(SITE_CONFIG.author)}</managingEditor>
+    <atom:link href="${SITE_CONFIG.url}/feed.xml" rel="self" type="application/rss+xml"/>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+${rssItems}
+  </channel>
+</rss>`;
+  
+  fs.writeFileSync(path.join(DIST_DIR, 'feed.xml'), rssFeed);
+}
+
+// Escape XML special characters
+function escapeXml(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 // Escape HTML to prevent XSS
 function escapeHtml(text) {
   const map = {
@@ -136,9 +239,11 @@ function build() {
   
   const posts = markdownFiles.map(buildPost);
   buildIndex(posts);
+  buildRSSFeed(posts);
   copyAssets();
   
   console.log('Build complete!');
+  console.log(`Generated ${posts.length} post(s) and RSS feed`);
 }
 
 build();
