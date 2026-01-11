@@ -61,17 +61,35 @@ function getMarkdownFiles() {
     return [];
   }
   
-  return fs.readdirSync(POSTS_DIR)
+  const files = fs.readdirSync(POSTS_DIR)
     .filter(file => file.endsWith('.md'))
-    .map(file => ({
-      filename: file,
-      slug: path.basename(file, '.md'),
-      path: path.join(POSTS_DIR, file)
-    }))
-    .sort((a, b) => {
-      // Sort by filename (assuming date prefix or alphabetical)
-      return b.filename.localeCompare(a.filename);
+    .map(file => {
+      const filePath = path.join(POSTS_DIR, file);
+      const content = fs.readFileSync(filePath, 'utf8');
+      const { metadata } = parseFrontmatter(content);
+      
+      // Try to parse date from frontmatter or filename
+      const parsedDate = parseDate(metadata.date, file);
+      
+      return {
+        filename: file,
+        slug: path.basename(file, '.md'),
+        path: filePath,
+        parsedDate: parsedDate,
+        dateString: metadata.date || ''
+      };
     });
+  
+  // Sort by parsed date (newest first), then by filename if no date
+  return files.sort((a, b) => {
+    if (a.parsedDate && b.parsedDate) {
+      return b.parsedDate.getTime() - a.parsedDate.getTime();
+    }
+    if (a.parsedDate && !b.parsedDate) return -1;
+    if (!a.parsedDate && b.parsedDate) return 1;
+    // Fallback to filename sorting
+    return b.filename.localeCompare(a.filename);
+  });
 }
 
 // Extract excerpt from markdown content (first paragraph or first 200 chars)
@@ -100,8 +118,65 @@ function extractExcerpt(fullContent, metadata, maxLength = 200) {
   return firstParagraph.substring(0, maxLength).trim() + '...';
 }
 
+// Parse date from string (supports ISO, common formats, or filename)
+function parseDate(dateString, filename = '') {
+  if (!dateString && !filename) return null;
+  
+  // Try to extract date from filename first (format: YYYY-MM-DD-...)
+  if (!dateString && filename) {
+    const filenameMatch = filename.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (filenameMatch) {
+      dateString = filenameMatch[0];
+    }
+  }
+  
+  if (!dateString) return null;
+  
+  try {
+    // Try parsing as ISO date first (YYYY-MM-DD)
+    const isoMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) {
+      const date = new Date(isoMatch[0]);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+    
+    // Try parsing with Date constructor
+    const date = new Date(dateString);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+    
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Format date for display (keeps original format if parseable, otherwise uses formatted)
+function formatDisplayDate(dateString, parsedDate) {
+  if (!dateString) return '';
+  
+  // If we have a parsed date, format it nicely
+  if (parsedDate) {
+    return parsedDate.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  }
+  
+  // Otherwise return original string
+  return dateString;
+}
+
 // Convert date string to RFC 822 format for RSS
-function formatRSSDate(dateString) {
+function formatRSSDate(dateString, parsedDate) {
+  if (parsedDate) {
+    return parsedDate.toUTCString();
+  }
+  
   if (!dateString) return new Date().toUTCString();
   
   try {
@@ -128,14 +203,21 @@ function buildPost(fileInfo) {
   
   const htmlContent = marked.parse(markdownContent);
   const title = metadata.title || fileInfo.slug;
-  const date = metadata.date ? `<time class="post-date">${metadata.date}</time>` : '';
+  
+  // Use parsed date if available, otherwise use original date string
+  const dateString = fileInfo.dateString || metadata.date || '';
+  const parsedDate = fileInfo.parsedDate || parseDate(dateString, fileInfo.filename);
+  const displayDate = formatDisplayDate(dateString, parsedDate);
+  const date = displayDate ? `<time class="post-date" datetime="${parsedDate ? parsedDate.toISOString() : ''}">${displayDate}</time>` : '';
+  
   const excerpt = extractExcerpt(content, metadata);
   
   const postData = {
     slug: fileInfo.slug,
     title: title,
-    date: metadata.date || '',
-    dateRaw: metadata.date || '',
+    date: displayDate,
+    dateRaw: dateString,
+    parsedDate: parsedDate,
     excerpt: excerpt,
     filename: fileInfo.filename
   };
@@ -201,7 +283,7 @@ function generateMetaTags(type, data = {}) {
 // Build index page
 function buildIndex(posts) {
   const postsList = posts.map(post => {
-    const dateStr = post.date ? `<time class="post-date">${post.date}</time>` : '';
+    const dateStr = post.date ? `<time class="post-date" datetime="${post.parsedDate ? post.parsedDate.toISOString() : ''}">${post.date}</time>` : '';
     const excerptStr = post.excerpt ? `<p class="post-excerpt">${escapeHtml(post.excerpt)}</p>` : '';
     return `
       <article class="post-preview">
@@ -232,7 +314,7 @@ function copyAssets() {
 function buildRSSFeed(posts) {
   const rssItems = posts.map(post => {
     const postUrl = `${SITE_CONFIG.url}/${post.slug}.html`;
-    const pubDate = formatRSSDate(post.dateRaw);
+    const pubDate = formatRSSDate(post.dateRaw, post.parsedDate);
     const description = escapeXml(post.excerpt);
     const title = escapeXml(post.title);
     
