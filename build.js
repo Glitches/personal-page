@@ -64,27 +64,38 @@ function getMarkdownFiles() {
   const files = fs.readdirSync(POSTS_DIR)
     .filter(file => file.endsWith('.md'))
     .map(file => {
-      const filePath = path.join(POSTS_DIR, file);
-      const content = fs.readFileSync(filePath, 'utf8');
-      const { metadata } = parseFrontmatter(content);
-      
-      // Skip draft posts
-      if (metadata.draft === 'true' || metadata.draft === true) {
+      try {
+        const filePath = path.join(POSTS_DIR, file);
+        
+        if (!fs.existsSync(filePath)) {
+          console.warn(`Warning: File ${file} not found, skipping...`);
+          return null;
+        }
+        
+        const content = fs.readFileSync(filePath, 'utf8');
+        const { metadata } = parseFrontmatter(content);
+        
+        // Skip draft posts
+        if (metadata.draft === 'true' || metadata.draft === true) {
+          return null;
+        }
+        
+        // Try to parse date from frontmatter or filename
+        const parsedDate = parseDate(metadata.date, file);
+        
+        return {
+          filename: file,
+          slug: path.basename(file, '.md'),
+          path: filePath,
+          parsedDate: parsedDate,
+          dateString: metadata.date || ''
+        };
+      } catch (error) {
+        console.error(`Error processing file ${file}:`, error.message);
         return null;
       }
-      
-      // Try to parse date from frontmatter or filename
-      const parsedDate = parseDate(metadata.date, file);
-      
-      return {
-        filename: file,
-        slug: path.basename(file, '.md'),
-        path: filePath,
-        parsedDate: parsedDate,
-        dateString: metadata.date || ''
-      };
     })
-    .filter(file => file !== null); // Remove draft posts
+    .filter(file => file !== null); // Remove draft posts and failed files
   
   // Sort by parsed date (newest first), then by filename if no date
   return files.sort((a, b) => {
@@ -228,48 +239,64 @@ function formatRSSDate(dateString, parsedDate) {
 
 // Build a single post
 function buildPost(fileInfo) {
-  const content = fs.readFileSync(fileInfo.path, 'utf8');
-  const { metadata, content: markdownContent } = parseFrontmatter(content);
-  
-  const htmlContent = marked.parse(markdownContent);
-  const title = metadata.title || fileInfo.slug;
-  
-  // Use parsed date if available, otherwise use original date string
-  const dateString = fileInfo.dateString || metadata.date || '';
-  const parsedDate = fileInfo.parsedDate || parseDate(dateString, fileInfo.filename);
-  const displayDate = formatDisplayDate(dateString, parsedDate);
-  const date = displayDate ? `<time class="post-date" datetime="${parsedDate ? parsedDate.toISOString() : ''}">${displayDate}</time>` : '';
-  
-  const excerpt = extractExcerpt(content, metadata);
-  const readingTime = calculateReadingTime(markdownContent);
-  const readingTimeStr = readingTime.minutes === 1 
-    ? '1 min read' 
-    : `${readingTime.minutes} min read`;
-  
-  const postData = {
-    slug: fileInfo.slug,
-    title: title,
-    date: displayDate,
-    dateRaw: dateString,
-    parsedDate: parsedDate,
-    excerpt: excerpt,
-    filename: fileInfo.filename
-  };
-  
-  const metaTags = generateMetaTags('post', postData);
-  const readingTimeHtml = `<span class="reading-time">${readingTimeStr}</span>`;
-  let postHtml = postTemplate
-    .replace(/\{\{TITLE\}\}/g, escapeHtml(title))
-    .replace('{{DATE}}', date)
-    .replace('{{READING_TIME}}', readingTimeHtml)
-    .replace('{{CONTENT}}', htmlContent)
-    .replace('{{SITE_TITLE}}', escapeHtml(SITE_CONFIG.title));
-  postHtml = postHtml.replace('{{META_TAGS}}', metaTags);
-  
-  const outputPath = path.join(DIST_DIR, `${fileInfo.slug}.html`);
-  fs.writeFileSync(outputPath, postHtml);
-  
-  return postData;
+  try {
+    if (!fs.existsSync(fileInfo.path)) {
+      throw new Error(`Post file not found: ${fileInfo.path}`);
+    }
+    
+    const content = fs.readFileSync(fileInfo.path, 'utf8');
+    const { metadata, content: markdownContent } = parseFrontmatter(content);
+    
+    let htmlContent;
+    try {
+      htmlContent = marked.parse(markdownContent);
+    } catch (error) {
+      console.error(`Error parsing markdown for ${fileInfo.filename}:`, error.message);
+      htmlContent = `<p>Error parsing markdown content.</p>`;
+    }
+    
+    const title = metadata.title || fileInfo.slug;
+    
+    // Use parsed date if available, otherwise use original date string
+    const dateString = fileInfo.dateString || metadata.date || '';
+    const parsedDate = fileInfo.parsedDate || parseDate(dateString, fileInfo.filename);
+    const displayDate = formatDisplayDate(dateString, parsedDate);
+    const date = displayDate ? `<time class="post-date" datetime="${parsedDate ? parsedDate.toISOString() : ''}">${displayDate}</time>` : '';
+    
+    const excerpt = extractExcerpt(content, metadata);
+    const readingTime = calculateReadingTime(markdownContent);
+    const readingTimeStr = readingTime.minutes === 1 
+      ? '1 min read' 
+      : `${readingTime.minutes} min read`;
+    
+    const postData = {
+      slug: fileInfo.slug,
+      title: title,
+      date: displayDate,
+      dateRaw: dateString,
+      parsedDate: parsedDate,
+      excerpt: excerpt,
+      filename: fileInfo.filename
+    };
+    
+    const metaTags = generateMetaTags('post', postData);
+    const readingTimeHtml = `<span class="reading-time">${readingTimeStr}</span>`;
+    let postHtml = postTemplate
+      .replace(/\{\{TITLE\}\}/g, escapeHtml(title))
+      .replace('{{DATE}}', date)
+      .replace('{{READING_TIME}}', readingTimeHtml)
+      .replace('{{CONTENT}}', htmlContent)
+      .replace('{{SITE_TITLE}}', escapeHtml(SITE_CONFIG.title));
+    postHtml = postHtml.replace('{{META_TAGS}}', metaTags);
+    
+    const outputPath = path.join(DIST_DIR, `${fileInfo.slug}.html`);
+    fs.writeFileSync(outputPath, postHtml);
+    
+    return postData;
+  } catch (error) {
+    console.error(`Error building post ${fileInfo.filename}:`, error.message);
+    return null;
+  }
 }
 
 // Generate SEO meta tags
@@ -440,19 +467,46 @@ function escapeHtml(text) {
 
 // Main build function
 function build() {
-  console.log('Building blog...');
-  
-  const markdownFiles = getMarkdownFiles();
-  console.log(`Found ${markdownFiles.length} markdown file(s)`);
-  
-  const posts = markdownFiles.map(buildPost);
-  buildIndex(posts);
-  buildRSSFeed(posts);
-  buildSitemap(posts);
-  copyAssets();
-  
-  console.log('Build complete!');
-  console.log(`Generated ${posts.length} post(s), RSS feed, and sitemap`);
+  try {
+    console.log('Building blog...');
+    
+    // Check if templates exist
+    if (!fs.existsSync(path.join(TEMPLATES_DIR, 'index.html'))) {
+      throw new Error('Template index.html not found');
+    }
+    if (!fs.existsSync(path.join(TEMPLATES_DIR, 'post.html'))) {
+      throw new Error('Template post.html not found');
+    }
+    
+    const markdownFiles = getMarkdownFiles();
+    console.log(`Found ${markdownFiles.length} markdown file(s)`);
+    
+    if (markdownFiles.length === 0) {
+      console.warn('Warning: No markdown files found. Generating empty site...');
+    }
+    
+    const posts = markdownFiles.map(buildPost).filter(post => post !== null);
+    
+    if (posts.length === 0 && markdownFiles.length > 0) {
+      console.warn('Warning: No posts were successfully built.');
+    }
+    
+    try {
+      buildIndex(posts);
+      buildRSSFeed(posts);
+      buildSitemap(posts);
+      copyAssets();
+    } catch (error) {
+      console.error('Error during build process:', error.message);
+      throw error;
+    }
+    
+    console.log('Build complete!');
+    console.log(`Generated ${posts.length} post(s), RSS feed, and sitemap`);
+  } catch (error) {
+    console.error('Build failed:', error.message);
+    process.exit(1);
+  }
 }
 
 build();
