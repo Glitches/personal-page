@@ -14,7 +14,7 @@
 - [ ] **Reading Time Estimate** - Calculate from word count and display on post pages
 - [ ] **Post Drafts Support** - Skip posts with `draft: true` in frontmatter
 - [ ] **Better Error Handling** - Handle missing files, malformed frontmatter, graceful failures
-- [ ] **404 Page** - Custom 404.html for missing pages
+- [x] **404 Page** - Custom 404.html for missing pages
 
 ## Nice to Have
 
