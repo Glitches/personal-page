@@ -2,6 +2,7 @@
 title: Useful Code Snippets Collection
 date: 2024-03-15
 excerpt: A collection of handy code snippets I use regularly in my projects.
+tags: code snippets, javascript, css, tools
 ---
 
 Here are some useful code snippets that I find myself using frequently in various projects. Feel free to use and adapt them for your own needs.

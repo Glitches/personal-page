@@ -122,6 +122,80 @@ main {
   font-style: italic;
 }
 
+/* Tags */
+.post-tags {
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.post-tags .tag {
+  display: inline-block;
+  padding: 0.25em 0.75em;
+  background-color: #f0f0f0;
+  color: #333;
+  text-decoration: none;
+  border-radius: 3px;
+  font-size: 0.85rem;
+  transition: background-color 0.2s;
+}
+
+.post-tags .tag:hover {
+  background-color: #e0e0e0;
+  text-decoration: none;
+}
+
+/* Tags Page */
+.tag-section {
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tag-section:last-child {
+  border-bottom: none;
+}
+
+.tag-section h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.tag-count {
+  font-size: 1rem;
+  color: #666;
+  font-weight: normal;
+}
+
+.tag-posts {
+  list-style: none;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.tag-posts li {
+  margin-bottom: 0.75rem;
+  padding-left: 0;
+}
+
+.tag-posts li a {
+  color: #333;
+  text-decoration: none;
+}
+
+.tag-posts li a:hover {
+  color: #0066cc;
+  text-decoration: underline;
+}
+
+.tag-posts li time {
+  color: #666;
+  font-size: 0.9rem;
+  margin-left: 0.5rem;
+}
+
 .post-content {
   line-height: 1.8;
 }

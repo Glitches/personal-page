@@ -23,10 +23,16 @@ if (!fs.existsSync(DIST_DIR)) {
 const indexTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'index.html'), 'utf8');
 const postTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'post.html'), 'utf8');
 let template404 = null;
+let templateTags = null;
 try {
   template404 = fs.readFileSync(path.join(TEMPLATES_DIR, '404.html'), 'utf8');
 } catch (error) {
   // 404 template is optional
+}
+try {
+  templateTags = fs.readFileSync(path.join(TEMPLATES_DIR, 'tags.html'), 'utf8');
+} catch (error) {
+  // Tags template is optional
 }
 
 // Configure marked for code blocks
@@ -45,7 +51,21 @@ function parseFrontmatter(content) {
     match[1].split('\n').forEach(line => {
       const [key, ...valueParts] = line.split(':');
       if (key && valueParts.length > 0) {
-        frontmatter[key.trim()] = valueParts.join(':').trim().replace(/^["']|["']$/g, '');
+        let value = valueParts.join(':').trim().replace(/^["']|["']$/g, '');
+        
+        // Handle tags (comma-separated or array-like)
+        if (key.trim() === 'tags') {
+          // Parse comma-separated tags or array format
+          if (value.startsWith('[') && value.endsWith(']')) {
+            // Array format: [tag1, tag2, tag3]
+            value = value.slice(1, -1).split(',').map(t => t.trim().replace(/^["']|["']$/g, ''));
+          } else {
+            // Comma-separated format: tag1, tag2, tag3
+            value = value.split(',').map(t => t.trim()).filter(t => t.length > 0);
+          }
+        }
+        
+        frontmatter[key.trim()] = value;
       }
     });
     return {
@@ -58,6 +78,20 @@ function parseFrontmatter(content) {
     metadata: {},
     content: content
   };
+}
+
+// Generate HTML for tags
+function generateTagsHTML(tags) {
+  if (!tags || !Array.isArray(tags) || tags.length === 0) {
+    return '';
+  }
+  
+  const tagsList = tags.map(tag => {
+    const slug = tag.toLowerCase().replace(/\s+/g, '-');
+    return `<a href="tags.html#${slug}" class="tag">${escapeHtml(tag)}</a>`;
+  }).join('');
+  
+  return `<div class="post-tags">${tagsList}</div>`;
 }
 
 // Get all markdown files from posts directory
@@ -275,6 +309,10 @@ function buildPost(fileInfo) {
       ? '1 min read' 
       : `${readingTime.minutes} min read`;
     
+    // Parse tags
+    const tags = Array.isArray(metadata.tags) ? metadata.tags : 
+                 (metadata.tags ? [metadata.tags] : []);
+    
     const postData = {
       slug: fileInfo.slug,
       title: title,
@@ -282,15 +320,18 @@ function buildPost(fileInfo) {
       dateRaw: dateString,
       parsedDate: parsedDate,
       excerpt: excerpt,
+      tags: tags,
       filename: fileInfo.filename
     };
     
     const metaTags = generateMetaTags('post', postData);
     const readingTimeHtml = `<span class="reading-time">${readingTimeStr}</span>`;
+    const tagsHtml = generateTagsHTML(tags);
     let postHtml = postTemplate
       .replace(/\{\{TITLE\}\}/g, escapeHtml(title))
       .replace('{{DATE}}', date)
       .replace('{{READING_TIME}}', readingTimeHtml)
+      .replace('{{TAGS}}', tagsHtml)
       .replace('{{CONTENT}}', htmlContent)
       .replace('{{SITE_TITLE}}', escapeHtml(SITE_CONFIG.title));
     postHtml = postHtml.replace('{{META_TAGS}}', metaTags);
@@ -370,6 +411,67 @@ function buildIndex(posts) {
   indexHtml = indexHtml.replace(/\{\{TITLE\}\}/g, escapeHtml(SITE_CONFIG.title));
   
   fs.writeFileSync(path.join(DIST_DIR, 'index.html'), indexHtml);
+}
+
+// Build tags page
+function buildTagsPage(posts) {
+  if (!templateTags) {
+    return; // Skip if template doesn't exist
+  }
+  
+  try {
+    // Collect all tags and their posts
+    const tagMap = {};
+    posts.forEach(post => {
+      if (post.tags && Array.isArray(post.tags) && post.tags.length > 0) {
+        post.tags.forEach(tag => {
+          if (!tagMap[tag]) {
+            tagMap[tag] = [];
+          }
+          tagMap[tag].push(post);
+        });
+      }
+    });
+    
+    // Sort tags alphabetically
+    const sortedTags = Object.keys(tagMap).sort();
+    
+    if (sortedTags.length === 0) {
+      // No tags, show message
+      const tagsList = '<p>No tags available yet.</p>';
+      let tagsHtml = templateTags
+        .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
+        .replace('{{SITE_URL}}', SITE_CONFIG.url)
+        .replace('{{TAGS_LIST}}', tagsList);
+      fs.writeFileSync(path.join(DIST_DIR, 'tags.html'), tagsHtml);
+      return;
+    }
+    
+    // Build tags list HTML
+    const tagsList = sortedTags.map(tag => {
+      const tagSlug = tag.toLowerCase().replace(/\s+/g, '-');
+      const tagPosts = tagMap[tag];
+      const postsList = tagPosts.map(post => {
+        return `        <li><a href="${post.slug}.html">${escapeHtml(post.title)}</a> <time class="post-date">${post.date}</time></li>`;
+      }).join('\n');
+      
+      return `      <section id="${tagSlug}" class="tag-section">
+        <h2>${escapeHtml(tag)} <span class="tag-count">(${tagPosts.length})</span></h2>
+        <ul class="tag-posts">
+${postsList}
+        </ul>
+      </section>`;
+    }).join('\n\n');
+    
+    let tagsHtml = templateTags
+      .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
+      .replace('{{SITE_URL}}', SITE_CONFIG.url)
+      .replace('{{TAGS_LIST}}', tagsList);
+    
+    fs.writeFileSync(path.join(DIST_DIR, 'tags.html'), tagsHtml);
+  } catch (error) {
+    console.warn('Warning: Could not generate tags page:', error.message);
+  }
 }
 
 // Copy CSS file
@@ -518,6 +620,7 @@ function build() {
       buildIndex(posts);
       buildRSSFeed(posts);
       buildSitemap(posts);
+      buildTagsPage(posts);
       build404Page();
       copyAssets();
     } catch (error) {

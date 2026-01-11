@@ -1,6 +1,7 @@
 ---
 title: Thoughts on Minimalism in Web Development
 date: January 25, 2024
+tags: web development, philosophy, minimalism
 ---
 
 In a world where web frameworks and libraries seem to multiply daily, there's something refreshing about keeping things simple. Minimalism in web development isn't about avoiding modern tools—it's about choosing the right tools for the job.
