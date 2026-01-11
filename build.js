@@ -22,6 +22,12 @@ if (!fs.existsSync(DIST_DIR)) {
 // Read template files
 const indexTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'index.html'), 'utf8');
 const postTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'post.html'), 'utf8');
+let template404 = null;
+try {
+  template404 = fs.readFileSync(path.join(TEMPLATES_DIR, '404.html'), 'utf8');
+} catch (error) {
+  // 404 template is optional
+}
 
 // Configure marked for code blocks
 marked.setOptions({
@@ -408,6 +414,23 @@ ${rssItems}
   fs.writeFileSync(path.join(DIST_DIR, 'feed.xml'), rssFeed);
 }
 
+// Build 404 page
+function build404Page() {
+  if (!template404) {
+    return; // Skip if template doesn't exist
+  }
+  
+  try {
+    let page404 = template404
+      .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
+      .replace('{{SITE_URL}}', SITE_CONFIG.url);
+    
+    fs.writeFileSync(path.join(DIST_DIR, '404.html'), page404);
+  } catch (error) {
+    console.warn('Warning: Could not generate 404 page:', error.message);
+  }
+}
+
 // Build sitemap.xml
 function buildSitemap(posts) {
   const now = new Date().toISOString();
@@ -495,6 +518,7 @@ function build() {
       buildIndex(posts);
       buildRSSFeed(posts);
       buildSitemap(posts);
+      build404Page();
       copyAssets();
     } catch (error) {
       console.error('Error during build process:', error.message);
