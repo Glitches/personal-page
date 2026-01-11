@@ -13,7 +13,8 @@ const SITE_CONFIG = {
   description: process.env.SITE_DESCRIPTION || 'A personal blog',
   author: process.env.SITE_AUTHOR || 'Author Name',
   authorBio: process.env.SITE_AUTHOR_BIO || 'Placeholder bio text - update with your actual bio in build.js or via SITE_AUTHOR_BIO environment variable.',
-  authorAvatar: process.env.SITE_AUTHOR_AVATAR || '' // Path to avatar image (e.g., 'avatar.jpg')
+  authorAvatar: process.env.SITE_AUTHOR_AVATAR || '', // Path to avatar image (e.g., 'avatar.jpg')
+  googleAnalyticsId: process.env.GOOGLE_ANALYTICS_ID || '' // Google Analytics 4 measurement ID (e.g., 'G-XXXXXXXXXX')
 };
 
 // Ensure dist directory exists
@@ -334,6 +335,7 @@ function buildPost(fileInfo) {
     const metaTags = generateMetaTags('post', postData);
     const readingTimeHtml = `<span class="reading-time">${readingTimeStr}</span>`;
     const tagsHtml = generateTagsHTML(tags);
+    const googleAnalytics = generateGoogleAnalytics();
     let postHtml = postTemplate
       .replace(/\{\{TITLE\}\}/g, escapeHtml(title))
       .replace('{{DATE}}', date)
@@ -341,7 +343,8 @@ function buildPost(fileInfo) {
       .replace('{{TAGS}}', tagsHtml)
       .replace('{{CONTENT}}', htmlContent)
       .replace('{{SITE_TITLE}}', escapeHtml(SITE_CONFIG.title))
-      .replace('{{YEAR}}', new Date().getFullYear());
+      .replace('{{YEAR}}', new Date().getFullYear())
+      .replace('{{GOOGLE_ANALYTICS}}', googleAnalytics);
     postHtml = postHtml.replace('{{META_TAGS}}', metaTags);
     
     const outputPath = path.join(DIST_DIR, `${fileInfo.slug}.html`);
@@ -399,6 +402,23 @@ function generateMetaTags(type, data = {}) {
   return tags.join('\n');
 }
 
+// Generate Google Analytics script
+function generateGoogleAnalytics() {
+  if (!SITE_CONFIG.googleAnalyticsId) {
+    return '';
+  }
+  
+  // Google Analytics 4 (GA4) script
+  return `  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=${escapeHtml(SITE_CONFIG.googleAnalyticsId)}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '${escapeHtml(SITE_CONFIG.googleAnalyticsId)}');
+  </script>`;
+}
+
 // Generate author bio HTML
 function generateAuthorBio() {
   if (!SITE_CONFIG.authorBio) {
@@ -440,9 +460,11 @@ function buildIndex(posts) {
   
   const metaTags = generateMetaTags('index');
   const authorBio = generateAuthorBio();
+  const googleAnalytics = generateGoogleAnalytics();
   let indexHtml = indexTemplate.replace('{{POSTS}}', postsList);
   indexHtml = indexHtml.replace('{{AUTHOR_BIO}}', authorBio);
   indexHtml = indexHtml.replace('{{META_TAGS}}', metaTags);
+  indexHtml = indexHtml.replace('{{GOOGLE_ANALYTICS}}', googleAnalytics);
   indexHtml = indexHtml.replace(/\{\{TITLE\}\}/g, escapeHtml(SITE_CONFIG.title));
   indexHtml = indexHtml.replace('{{YEAR}}', new Date().getFullYear());
   
@@ -480,11 +502,13 @@ function buildArchivePage(posts) {
     
     if (years.length === 0) {
       const archiveList = '<p>No posts available yet.</p>';
+      const googleAnalytics = generateGoogleAnalytics();
       let archiveHtml = templateArchive
         .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
         .replace('{{SITE_URL}}', SITE_CONFIG.url)
         .replace('{{ARCHIVE_LIST}}', archiveList)
-        .replace('{{YEAR}}', new Date().getFullYear());
+        .replace('{{YEAR}}', new Date().getFullYear())
+        .replace('{{GOOGLE_ANALYTICS}}', googleAnalytics);
       fs.writeFileSync(path.join(DIST_DIR, 'archive.html'), archiveHtml);
       return;
     }
@@ -516,11 +540,13 @@ ${monthSections}
       </section>`;
     }).join('\n\n');
     
+    const googleAnalytics = generateGoogleAnalytics();
     let archiveHtml = templateArchive
       .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
       .replace('{{SITE_URL}}', SITE_CONFIG.url)
       .replace('{{ARCHIVE_LIST}}', archiveList)
-      .replace('{{YEAR}}', new Date().getFullYear());
+      .replace('{{YEAR}}', new Date().getFullYear())
+      .replace('{{GOOGLE_ANALYTICS}}', googleAnalytics);
     
     fs.writeFileSync(path.join(DIST_DIR, 'archive.html'), archiveHtml);
   } catch (error) {
@@ -554,11 +580,13 @@ function buildTagsPage(posts) {
     if (sortedTags.length === 0) {
       // No tags, show message
       const tagsList = '<p>No tags available yet.</p>';
+      const googleAnalytics = generateGoogleAnalytics();
       let tagsHtml = templateTags
         .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
         .replace('{{SITE_URL}}', SITE_CONFIG.url)
         .replace('{{TAGS_LIST}}', tagsList)
-        .replace('{{YEAR}}', new Date().getFullYear());
+        .replace('{{YEAR}}', new Date().getFullYear())
+        .replace('{{GOOGLE_ANALYTICS}}', googleAnalytics);
       fs.writeFileSync(path.join(DIST_DIR, 'tags.html'), tagsHtml);
       return;
     }
@@ -579,11 +607,13 @@ ${postsList}
       </section>`;
     }).join('\n\n');
     
+    const googleAnalytics = generateGoogleAnalytics();
     let tagsHtml = templateTags
       .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
       .replace('{{SITE_URL}}', SITE_CONFIG.url)
       .replace('{{TAGS_LIST}}', tagsList)
-      .replace('{{YEAR}}', new Date().getFullYear());
+      .replace('{{YEAR}}', new Date().getFullYear())
+      .replace('{{GOOGLE_ANALYTICS}}', googleAnalytics);
     
     fs.writeFileSync(path.join(DIST_DIR, 'tags.html'), tagsHtml);
   } catch (error) {
@@ -640,10 +670,12 @@ function build404Page() {
   }
   
   try {
+    const googleAnalytics = generateGoogleAnalytics();
     let page404 = template404
       .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
       .replace('{{SITE_URL}}', SITE_CONFIG.url)
-      .replace('{{YEAR}}', new Date().getFullYear());
+      .replace('{{YEAR}}', new Date().getFullYear())
+      .replace('{{GOOGLE_ANALYTICS}}', googleAnalytics);
     
     fs.writeFileSync(path.join(DIST_DIR, '404.html'), page404);
   } catch (error) {

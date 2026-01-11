@@ -86,6 +86,7 @@ personal-page/
   - `{{POSTS}}` - Post listings HTML
   - `{{AUTHOR_BIO}}` - Author bio section (if configured)
   - `{{META_TAGS}}` - SEO meta tags
+  - `{{GOOGLE_ANALYTICS}}` - Google Analytics script (if configured)
   - `{{TITLE}}` - Site title
 - Simple string replacement in build.js
 
@@ -98,6 +99,7 @@ personal-page/
   - `{{TAGS}}` - Post tags (if any)
   - `{{CONTENT}}` - Post content (HTML)
   - `{{META_TAGS}}` - SEO meta tags
+  - `{{GOOGLE_ANALYTICS}}` - Google Analytics script (if configured)
   - `{{SITE_TITLE}}` - Site title
 - Includes navigation back to index
 
@@ -107,6 +109,7 @@ personal-page/
   - `{{SITE_TITLE}}` - Site title
   - `{{SITE_URL}}` - Site URL
   - `{{ARCHIVE_LIST}}` - Archive listings HTML
+  - `{{GOOGLE_ANALYTICS}}` - Google Analytics script (if configured)
 - Only generated if template exists
 
 ### `templates/tags.html` (optional)
@@ -115,6 +118,7 @@ personal-page/
   - `{{SITE_TITLE}}` - Site title
   - `{{SITE_URL}}` - Site URL
   - `{{TAGS_LIST}}` - Tags listings HTML
+  - `{{GOOGLE_ANALYTICS}}` - Google Analytics script (if configured)
 - Only generated if template exists
 
 ### `templates/404.html` (optional)
@@ -122,6 +126,7 @@ personal-page/
 - Placeholders:
   - `{{SITE_TITLE}}` - Site title
   - `{{SITE_URL}}` - Site URL
+  - `{{GOOGLE_ANALYTICS}}` - Google Analytics script (if configured)
 - Only generated if template exists
 
 ### `styles.css`
@@ -213,11 +218,18 @@ Site configuration is defined in `build.js` via `SITE_CONFIG` object and can be 
 - `SITE_AUTHOR` - Author name (default: 'Author Name')
 - `SITE_AUTHOR_BIO` - Author bio text
 - `SITE_AUTHOR_AVATAR` - Path to author avatar image
+- `GOOGLE_ANALYTICS_ID` - Google Analytics 4 measurement ID (e.g., 'G-XXXXXXXXXX')
 
 Set via environment variables:
 ```bash
-SITE_TITLE="My Blog" SITE_URL="https://example.com" npm run build
+SITE_TITLE="My Blog" SITE_URL="https://example.com" GOOGLE_ANALYTICS_ID="G-XXXXXXXXXX" npm run build
 ```
+
+**Google Analytics:**
+- Uses Google Analytics 4 (GA4) format
+- Automatically included on all pages if `GOOGLE_ANALYTICS_ID` is set
+- Script is placed in the `<head>` section of all templates
+- If not configured, no analytics script is included
 
 ## Important Conventions
 
