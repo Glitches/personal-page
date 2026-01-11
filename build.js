@@ -92,6 +92,30 @@ function getMarkdownFiles() {
   });
 }
 
+// Calculate reading time from markdown content (average reading speed: 200 words/min)
+function calculateReadingTime(markdownContent) {
+  // Remove markdown syntax to get plain text
+  const plainText = markdownContent
+    .replace(/^#+\s+/gm, '') // Remove headers
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Convert links to text
+    .replace(/`([^`]+)`/g, '$1') // Remove inline code markers
+    .replace(/\*\*([^\*]+)\*\*/g, '$1') // Remove bold
+    .replace(/\*([^\*]+)\*/g, '$1') // Remove italic
+    .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+    .trim();
+  
+  // Count words (split by whitespace)
+  const wordCount = plainText.split(/\s+/).filter(word => word.length > 0).length;
+  
+  // Calculate reading time (200 words per minute)
+  const readingTimeMinutes = Math.ceil(wordCount / 200);
+  
+  return {
+    minutes: readingTimeMinutes,
+    wordCount: wordCount
+  };
+}
+
 // Extract excerpt from markdown content (first paragraph or first 200 chars)
 function extractExcerpt(fullContent, metadata, maxLength = 200) {
   // Try to get excerpt from frontmatter first
@@ -211,6 +235,10 @@ function buildPost(fileInfo) {
   const date = displayDate ? `<time class="post-date" datetime="${parsedDate ? parsedDate.toISOString() : ''}">${displayDate}</time>` : '';
   
   const excerpt = extractExcerpt(content, metadata);
+  const readingTime = calculateReadingTime(markdownContent);
+  const readingTimeStr = readingTime.minutes === 1 
+    ? '1 min read' 
+    : `${readingTime.minutes} min read`;
   
   const postData = {
     slug: fileInfo.slug,
@@ -223,9 +251,11 @@ function buildPost(fileInfo) {
   };
   
   const metaTags = generateMetaTags('post', postData);
+  const readingTimeHtml = `<span class="reading-time">${readingTimeStr}</span>`;
   let postHtml = postTemplate
     .replace(/\{\{TITLE\}\}/g, escapeHtml(title))
     .replace('{{DATE}}', date)
+    .replace('{{READING_TIME}}', readingTimeHtml)
     .replace('{{CONTENT}}', htmlContent)
     .replace('{{SITE_TITLE}}', escapeHtml(SITE_CONFIG.title));
   postHtml = postHtml.replace('{{META_TAGS}}', metaTags);

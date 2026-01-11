@@ -103,11 +103,23 @@ main {
   margin-bottom: 0.5rem;
 }
 
+.post-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
 .post-date {
-  display: block;
   color: #666;
   font-size: 0.95rem;
-  margin-bottom: 2rem;
+}
+
+.reading-time {
+  color: #666;
+  font-size: 0.9rem;
+  font-style: italic;
 }
 
 .post-content {
