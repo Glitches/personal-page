@@ -68,6 +68,11 @@ function getMarkdownFiles() {
       const content = fs.readFileSync(filePath, 'utf8');
       const { metadata } = parseFrontmatter(content);
       
+      // Skip draft posts
+      if (metadata.draft === 'true' || metadata.draft === true) {
+        return null;
+      }
+      
       // Try to parse date from frontmatter or filename
       const parsedDate = parseDate(metadata.date, file);
       
@@ -78,7 +83,8 @@ function getMarkdownFiles() {
         parsedDate: parsedDate,
         dateString: metadata.date || ''
       };
-    });
+    })
+    .filter(file => file !== null); // Remove draft posts
   
   // Sort by parsed date (newest first), then by filename if no date
   return files.sort((a, b) => {
