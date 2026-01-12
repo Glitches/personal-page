@@ -11,7 +11,10 @@ const SITE_CONFIG = {
   title: process.env.SITE_TITLE || 'My Personal Blog',
   url: process.env.SITE_URL || 'https://example.com',
   description: process.env.SITE_DESCRIPTION || 'A personal blog',
-  author: process.env.SITE_AUTHOR || 'Author Name'
+  author: process.env.SITE_AUTHOR || 'Author Name',
+  authorBio: process.env.SITE_AUTHOR_BIO || 'Placeholder bio text - update with your actual bio in build.js or via SITE_AUTHOR_BIO environment variable.',
+  authorAvatar: process.env.SITE_AUTHOR_AVATAR || '', // Path to avatar image (e.g., 'avatar.jpg')
+  googleAnalyticsId: process.env.GOOGLE_ANALYTICS_ID || '' // Google Analytics 4 measurement ID (e.g., 'G-XXXXXXXXXX')
 };
 
 // Ensure dist directory exists
@@ -23,10 +26,22 @@ if (!fs.existsSync(DIST_DIR)) {
 const indexTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'index.html'), 'utf8');
 const postTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'post.html'), 'utf8');
 let template404 = null;
+let templateTags = null;
+let templateArchive = null;
 try {
   template404 = fs.readFileSync(path.join(TEMPLATES_DIR, '404.html'), 'utf8');
 } catch (error) {
   // 404 template is optional
+}
+try {
+  templateTags = fs.readFileSync(path.join(TEMPLATES_DIR, 'tags.html'), 'utf8');
+} catch (error) {
+  // Tags template is optional
+}
+try {
+  templateArchive = fs.readFileSync(path.join(TEMPLATES_DIR, 'archive.html'), 'utf8');
+} catch (error) {
+  // Archive template is optional
 }
 
 // Configure marked for code blocks
@@ -45,7 +60,21 @@ function parseFrontmatter(content) {
     match[1].split('\n').forEach(line => {
       const [key, ...valueParts] = line.split(':');
       if (key && valueParts.length > 0) {
-        frontmatter[key.trim()] = valueParts.join(':').trim().replace(/^["']|["']$/g, '');
+        let value = valueParts.join(':').trim().replace(/^["']|["']$/g, '');
+        
+        // Handle tags (comma-separated or array-like)
+        if (key.trim() === 'tags') {
+          // Parse comma-separated tags or array format
+          if (value.startsWith('[') && value.endsWith(']')) {
+            // Array format: [tag1, tag2, tag3]
+            value = value.slice(1, -1).split(',').map(t => t.trim().replace(/^["']|["']$/g, ''));
+          } else {
+            // Comma-separated format: tag1, tag2, tag3
+            value = value.split(',').map(t => t.trim()).filter(t => t.length > 0);
+          }
+        }
+        
+        frontmatter[key.trim()] = value;
       }
     });
     return {
@@ -58,6 +87,20 @@ function parseFrontmatter(content) {
     metadata: {},
     content: content
   };
+}
+
+// Generate HTML for tags
+function generateTagsHTML(tags) {
+  if (!tags || !Array.isArray(tags) || tags.length === 0) {
+    return '';
+  }
+  
+  const tagsList = tags.map(tag => {
+    const slug = tag.toLowerCase().replace(/\s+/g, '-');
+    return `<a href="tags.html#${slug}" class="tag">${escapeHtml(tag)}</a>`;
+  }).join('');
+  
+  return `<div class="post-tags">${tagsList}</div>`;
 }
 
 // Get all markdown files from posts directory
@@ -275,6 +318,10 @@ function buildPost(fileInfo) {
       ? '1 min read' 
       : `${readingTime.minutes} min read`;
     
+    // Parse tags
+    const tags = Array.isArray(metadata.tags) ? metadata.tags : 
+                 (metadata.tags ? [metadata.tags] : []);
+    
     const postData = {
       slug: fileInfo.slug,
       title: title,
@@ -282,17 +329,23 @@ function buildPost(fileInfo) {
       dateRaw: dateString,
       parsedDate: parsedDate,
       excerpt: excerpt,
+      tags: tags,
       filename: fileInfo.filename
     };
     
     const metaTags = generateMetaTags('post', postData);
     const readingTimeHtml = `<span class="reading-time">${readingTimeStr}</span>`;
+    const tagsHtml = generateTagsHTML(tags);
+    const googleAnalytics = generateGoogleAnalytics();
     let postHtml = postTemplate
       .replace(/\{\{TITLE\}\}/g, escapeHtml(title))
       .replace('{{DATE}}', date)
       .replace('{{READING_TIME}}', readingTimeHtml)
+      .replace('{{TAGS}}', tagsHtml)
       .replace('{{CONTENT}}', htmlContent)
-      .replace('{{SITE_TITLE}}', escapeHtml(SITE_CONFIG.title));
+      .replace('{{SITE_TITLE}}', escapeHtml(SITE_CONFIG.title))
+      .replace('{{YEAR}}', new Date().getFullYear())
+      .replace('{{GOOGLE_ANALYTICS}}', googleAnalytics);
     postHtml = postHtml.replace('{{META_TAGS}}', metaTags);
     
     const outputPath = path.join(DIST_DIR, `${fileInfo.slug}.html`);
@@ -350,6 +403,48 @@ function generateMetaTags(type, data = {}) {
   return tags.join('\n');
 }
 
+// Generate Google Analytics script
+function generateGoogleAnalytics() {
+  if (!SITE_CONFIG.googleAnalyticsId) {
+    return '';
+  }
+  
+  // Google Analytics 4 (GA4) script
+  return `  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=${escapeHtml(SITE_CONFIG.googleAnalyticsId)}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '${escapeHtml(SITE_CONFIG.googleAnalyticsId)}');
+  </script>`;
+}
+
+// Generate author bio HTML
+function generateAuthorBio() {
+  if (!SITE_CONFIG.authorBio) {
+    return '';
+  }
+  
+  let bioHtml = '<section class="author-bio">';
+  
+  if (SITE_CONFIG.authorAvatar) {
+    bioHtml += `<img src="${SITE_CONFIG.authorAvatar}" alt="${escapeHtml(SITE_CONFIG.author)}" class="author-avatar" />`;
+  } else {
+    // Placeholder avatar - user should replace with actual image
+    bioHtml += `<div class="author-avatar placeholder">${escapeHtml(SITE_CONFIG.author.charAt(0).toUpperCase())}</div>`;
+  }
+  
+  bioHtml += `<div class="author-info">
+    <h2>About ${escapeHtml(SITE_CONFIG.author)}</h2>
+    <p>${escapeHtml(SITE_CONFIG.authorBio)}</p>
+  </div>`;
+  
+  bioHtml += '</section>';
+  
+  return bioHtml;
+}
+
 // Build index page
 function buildIndex(posts) {
   const postsList = posts.map(post => {
@@ -365,11 +460,166 @@ function buildIndex(posts) {
   }).join('\n');
   
   const metaTags = generateMetaTags('index');
+  const authorBio = generateAuthorBio();
+  const googleAnalytics = generateGoogleAnalytics();
   let indexHtml = indexTemplate.replace('{{POSTS}}', postsList);
+  indexHtml = indexHtml.replace('{{AUTHOR_BIO}}', authorBio);
   indexHtml = indexHtml.replace('{{META_TAGS}}', metaTags);
+  indexHtml = indexHtml.replace('{{GOOGLE_ANALYTICS}}', googleAnalytics);
   indexHtml = indexHtml.replace(/\{\{TITLE\}\}/g, escapeHtml(SITE_CONFIG.title));
+  indexHtml = indexHtml.replace('{{YEAR}}', new Date().getFullYear());
   
   fs.writeFileSync(path.join(DIST_DIR, 'index.html'), indexHtml);
+}
+
+// Build archive page
+function buildArchivePage(posts) {
+  if (!templateArchive) {
+    return; // Skip if template doesn't exist
+  }
+  
+  try {
+    // Group posts by year and month
+    const archiveByYear = {};
+    
+    posts.forEach(post => {
+      if (!post.parsedDate) return;
+      
+      const year = post.parsedDate.getFullYear();
+      const month = post.parsedDate.toLocaleDateString('en-US', { month: 'long' });
+      
+      if (!archiveByYear[year]) {
+        archiveByYear[year] = {};
+      }
+      if (!archiveByYear[year][month]) {
+        archiveByYear[year][month] = [];
+      }
+      
+      archiveByYear[year][month].push(post);
+    });
+    
+    // Build archive HTML
+    const years = Object.keys(archiveByYear).sort((a, b) => b - a); // Newest first
+    
+    if (years.length === 0) {
+      const archiveList = '<p>No posts available yet.</p>';
+      const googleAnalytics = generateGoogleAnalytics();
+      let archiveHtml = templateArchive
+        .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
+        .replace('{{SITE_URL}}', SITE_CONFIG.url)
+        .replace('{{ARCHIVE_LIST}}', archiveList)
+        .replace('{{YEAR}}', new Date().getFullYear())
+        .replace('{{GOOGLE_ANALYTICS}}', googleAnalytics);
+      fs.writeFileSync(path.join(DIST_DIR, 'archive.html'), archiveHtml);
+      return;
+    }
+    
+    const archiveList = years.map(year => {
+      const months = Object.keys(archiveByYear[year]).sort((a, b) => {
+        const monthOrder = ['January', 'February', 'March', 'April', 'May', 'June', 
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+        return monthOrder.indexOf(a) - monthOrder.indexOf(b);
+      }).reverse(); // Newest month first
+      
+      const monthSections = months.map(month => {
+        const monthPosts = archiveByYear[year][month];
+        const postsList = monthPosts.map(post => {
+          return `        <li><a href="${post.slug}.html">${escapeHtml(post.title)}</a> <time class="post-date">${post.date}</time></li>`;
+        }).join('\n');
+        
+        return `      <section class="archive-month">
+        <h3>${month}</h3>
+        <ul class="archive-posts">
+${postsList}
+        </ul>
+      </section>`;
+      }).join('\n\n');
+      
+      return `      <section class="archive-year">
+        <h2>${year}</h2>
+${monthSections}
+      </section>`;
+    }).join('\n\n');
+    
+    const googleAnalytics = generateGoogleAnalytics();
+    let archiveHtml = templateArchive
+      .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
+      .replace('{{SITE_URL}}', SITE_CONFIG.url)
+      .replace('{{ARCHIVE_LIST}}', archiveList)
+      .replace('{{YEAR}}', new Date().getFullYear())
+      .replace('{{GOOGLE_ANALYTICS}}', googleAnalytics);
+    
+    fs.writeFileSync(path.join(DIST_DIR, 'archive.html'), archiveHtml);
+  } catch (error) {
+    console.warn('Warning: Could not generate archive page:', error.message);
+  }
+}
+
+// Build tags page
+function buildTagsPage(posts) {
+  if (!templateTags) {
+    return; // Skip if template doesn't exist
+  }
+  
+  try {
+    // Collect all tags and their posts
+    const tagMap = {};
+    posts.forEach(post => {
+      if (post.tags && Array.isArray(post.tags) && post.tags.length > 0) {
+        post.tags.forEach(tag => {
+          if (!tagMap[tag]) {
+            tagMap[tag] = [];
+          }
+          tagMap[tag].push(post);
+        });
+      }
+    });
+    
+    // Sort tags alphabetically
+    const sortedTags = Object.keys(tagMap).sort();
+    
+    if (sortedTags.length === 0) {
+      // No tags, show message
+      const tagsList = '<p>No tags available yet.</p>';
+      const googleAnalytics = generateGoogleAnalytics();
+      let tagsHtml = templateTags
+        .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
+        .replace('{{SITE_URL}}', SITE_CONFIG.url)
+        .replace('{{TAGS_LIST}}', tagsList)
+        .replace('{{YEAR}}', new Date().getFullYear())
+        .replace('{{GOOGLE_ANALYTICS}}', googleAnalytics);
+      fs.writeFileSync(path.join(DIST_DIR, 'tags.html'), tagsHtml);
+      return;
+    }
+    
+    // Build tags list HTML
+    const tagsList = sortedTags.map(tag => {
+      const tagSlug = tag.toLowerCase().replace(/\s+/g, '-');
+      const tagPosts = tagMap[tag];
+      const postsList = tagPosts.map(post => {
+        return `        <li><a href="${post.slug}.html">${escapeHtml(post.title)}</a> <time class="post-date">${post.date}</time></li>`;
+      }).join('\n');
+      
+      return `      <section id="${tagSlug}" class="tag-section">
+        <h2>${escapeHtml(tag)} <span class="tag-count">(${tagPosts.length})</span></h2>
+        <ul class="tag-posts">
+${postsList}
+        </ul>
+      </section>`;
+    }).join('\n\n');
+    
+    const googleAnalytics = generateGoogleAnalytics();
+    let tagsHtml = templateTags
+      .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
+      .replace('{{SITE_URL}}', SITE_CONFIG.url)
+      .replace('{{TAGS_LIST}}', tagsList)
+      .replace('{{YEAR}}', new Date().getFullYear())
+      .replace('{{GOOGLE_ANALYTICS}}', googleAnalytics);
+    
+    fs.writeFileSync(path.join(DIST_DIR, 'tags.html'), tagsHtml);
+  } catch (error) {
+    console.warn('Warning: Could not generate tags page:', error.message);
+  }
 }
 
 // Copy CSS file
@@ -421,9 +671,12 @@ function build404Page() {
   }
   
   try {
+    const googleAnalytics = generateGoogleAnalytics();
     let page404 = template404
       .replace(/\{\{SITE_TITLE\}\}/g, escapeHtml(SITE_CONFIG.title))
-      .replace('{{SITE_URL}}', SITE_CONFIG.url);
+      .replace('{{SITE_URL}}', SITE_CONFIG.url)
+      .replace('{{YEAR}}', new Date().getFullYear())
+      .replace('{{GOOGLE_ANALYTICS}}', googleAnalytics);
     
     fs.writeFileSync(path.join(DIST_DIR, '404.html'), page404);
   } catch (error) {
@@ -518,6 +771,8 @@ function build() {
       buildIndex(posts);
       buildRSSFeed(posts);
       buildSitemap(posts);
+      buildTagsPage(posts);
+      buildArchivePage(posts);
       build404Page();
       copyAssets();
     } catch (error) {

@@ -7,16 +7,22 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="feed.xml">
 {{META_TAGS}}
+{{GOOGLE_ANALYTICS}}
 </head>
 <body>
   <header>
     <h1>My Personal Blog</h1>
+    <label class="dark-mode-toggle" for="dark-mode-checkbox">
+      <input type="checkbox" id="dark-mode-checkbox" />
+      <span class="toggle-slider"></span>
+    </label>
   </header>
   <main>
+    {{AUTHOR_BIO}}
     {{POSTS}}
   </main>
   <footer>
-    <p>&copy; 2024</p>
+    <p>&copy; {{YEAR}}</p>
   </footer>
 </body>
 </html>

@@ -2,6 +2,7 @@
 title: Getting Started with Markdown
 date: 2024-02-10
 excerpt: Learn the basics of Markdown syntax and how to write beautiful formatted text with simple, readable syntax.
+tags: markdown, tutorial, writing
 ---
 
 Markdown is a lightweight markup language that you can use to add formatting elements to plaintext text documents. Created by John Gruber in 2004, Markdown is now one of the world's most popular markup languages.
