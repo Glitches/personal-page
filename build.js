@@ -97,10 +97,10 @@ function generateTagsHTML(tags) {
   
   const tagsList = tags.map(tag => {
     const slug = tag.toLowerCase().replace(/\s+/g, '-');
-    return `<a href="tags.html#${slug}" class="tag">${escapeHtml(tag)}</a>`;
+    return `<a href="tags.html#${slug}" class="tag" aria-label="View posts tagged with ${escapeHtml(tag)}">${escapeHtml(tag)}</a>`;
   }).join('');
   
-  return `<div class="post-tags">${tagsList}</div>`;
+  return `<nav class="post-tags" aria-label="Post tags">${tagsList}</nav>`;
 }
 
 // Get all markdown files from posts directory
@@ -310,7 +310,7 @@ function buildPost(fileInfo) {
     const dateString = fileInfo.dateString || metadata.date || '';
     const parsedDate = fileInfo.parsedDate || parseDate(dateString, fileInfo.filename);
     const displayDate = formatDisplayDate(dateString, parsedDate);
-    const date = displayDate ? `<time class="post-date" datetime="${parsedDate ? parsedDate.toISOString() : ''}">${displayDate}</time>` : '';
+    const date = displayDate ? `<time class="post-date" datetime="${parsedDate ? parsedDate.toISOString() : ''}" aria-label="Published on ${displayDate}">${displayDate}</time>` : '';
     
     const excerpt = extractExcerpt(content, metadata);
     const readingTime = calculateReadingTime(markdownContent);
@@ -334,7 +334,7 @@ function buildPost(fileInfo) {
     };
     
     const metaTags = generateMetaTags('post', postData);
-    const readingTimeHtml = `<span class="reading-time">${readingTimeStr}</span>`;
+    const readingTimeHtml = `<span class="reading-time" aria-label="Reading time: ${readingTimeStr}">${readingTimeStr}</span>`;
     const tagsHtml = generateTagsHTML(tags);
     const googleAnalytics = generateGoogleAnalytics();
     let postHtml = postTemplate
@@ -426,13 +426,13 @@ function generateAuthorBio() {
     return '';
   }
   
-  let bioHtml = '<section class="author-bio">';
+  let bioHtml = '<section class="author-bio" aria-label="Author biography">';
   
   if (SITE_CONFIG.authorAvatar) {
     bioHtml += `<img src="${SITE_CONFIG.authorAvatar}" alt="${escapeHtml(SITE_CONFIG.author)}" class="author-avatar" />`;
   } else {
     // Placeholder avatar - user should replace with actual image
-    bioHtml += `<div class="author-avatar placeholder">${escapeHtml(SITE_CONFIG.author.charAt(0).toUpperCase())}</div>`;
+    bioHtml += `<div class="author-avatar placeholder" aria-hidden="true">${escapeHtml(SITE_CONFIG.author.charAt(0).toUpperCase())}</div>`;
   }
   
   bioHtml += `<div class="author-info">
@@ -448,11 +448,11 @@ function generateAuthorBio() {
 // Build index page
 function buildIndex(posts) {
   const postsList = posts.map(post => {
-    const dateStr = post.date ? `<time class="post-date" datetime="${post.parsedDate ? post.parsedDate.toISOString() : ''}">${post.date}</time>` : '';
+    const dateStr = post.date ? `<time class="post-date" datetime="${post.parsedDate ? post.parsedDate.toISOString() : ''}" aria-label="Published on ${post.date}">${post.date}</time>` : '';
     const excerptStr = post.excerpt ? `<p class="post-excerpt">${escapeHtml(post.excerpt)}</p>` : '';
     return `
-      <article class="post-preview">
-        <h2><a href="${post.slug}.html">${escapeHtml(post.title)}</a></h2>
+      <article class="post-preview" aria-labelledby="post-${post.slug}">
+        <h2 id="post-${post.slug}"><a href="${post.slug}.html" aria-label="Read full post: ${escapeHtml(post.title)}">${escapeHtml(post.title)}</a></h2>
         ${dateStr}
         ${excerptStr}
       </article>
@@ -524,20 +524,20 @@ function buildArchivePage(posts) {
       const monthSections = months.map(month => {
         const monthPosts = archiveByYear[year][month];
         const postsList = monthPosts.map(post => {
-          return `        <li><a href="${post.slug}.html">${escapeHtml(post.title)}</a> <time class="post-date">${post.date}</time></li>`;
+          return `        <li><a href="${post.slug}.html" aria-label="${escapeHtml(post.title)}">${escapeHtml(post.title)}</a> <time class="post-date" aria-label="Published on ${post.date}">${post.date}</time></li>`;
         }).join('\n');
         
-        return `      <section class="archive-month">
-        <h3>${month}</h3>
+        return `      <section class="archive-month" aria-labelledby="month-${year}-${month}">
+        <h3 id="month-${year}-${month}">${month}</h3>
         <ul class="archive-posts">
-${postsList}
+ ${postsList}
         </ul>
       </section>`;
       }).join('\n\n');
       
-      return `      <section class="archive-year">
-        <h2>${year}</h2>
-${monthSections}
+      return `      <section class="archive-year" aria-labelledby="year-${year}">
+        <h2 id="year-${year}">${year}</h2>
+ ${monthSections}
       </section>`;
     }).join('\n\n');
     
@@ -597,13 +597,13 @@ function buildTagsPage(posts) {
       const tagSlug = tag.toLowerCase().replace(/\s+/g, '-');
       const tagPosts = tagMap[tag];
       const postsList = tagPosts.map(post => {
-        return `        <li><a href="${post.slug}.html">${escapeHtml(post.title)}</a> <time class="post-date">${post.date}</time></li>`;
+        return `        <li><a href="${post.slug}.html" aria-label="${escapeHtml(post.title)}">${escapeHtml(post.title)}</a> <time class="post-date" aria-label="Published on ${post.date}">${post.date}</time></li>`;
       }).join('\n');
       
-      return `      <section id="${tagSlug}" class="tag-section">
-        <h2>${escapeHtml(tag)} <span class="tag-count">(${tagPosts.length})</span></h2>
+      return `      <section id="${tagSlug}" class="tag-section" aria-labelledby="tag-${tagSlug}">
+        <h2 id="tag-${tagSlug}">${escapeHtml(tag)} <span class="tag-count">(${tagPosts.length})</span></h2>
         <ul class="tag-posts">
-${postsList}
+ ${postsList}
         </ul>
       </section>`;
     }).join('\n\n');

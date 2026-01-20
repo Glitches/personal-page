@@ -11,18 +11,21 @@
 {{GOOGLE_ANALYTICS}}
 </head>
 <body>
-  <header>
-    <nav>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <header role="banner">
+    <nav role="navigation" aria-label="Main navigation">
       <a href="index.html" class="home-link">{{SITE_TITLE}}</a>
-      <label class="dark-mode-toggle" for="dark-mode-checkbox">
-        <input type="checkbox" id="dark-mode-checkbox" />
-        <span class="toggle-slider"></span>
-      </label>
+      <div class="dark-mode-toggle-wrapper">
+        <label class="dark-mode-toggle" for="dark-mode-checkbox">
+          <input type="checkbox" id="dark-mode-checkbox" aria-label="Toggle dark mode" />
+          <span class="toggle-slider" aria-hidden="true"></span>
+        </label>
+      </div>
     </nav>
   </header>
-  <main>
-    <article class="post">
-      <h1>{{TITLE}}</h1>
+  <main id="main-content" role="main">
+    <article class="post" aria-labelledby="post-title">
+      <h1 id="post-title">{{TITLE}}</h1>
       <div class="post-meta">
         {{DATE}}
         {{READING_TIME}}
@@ -33,7 +36,7 @@
       </div>
     </article>
   </main>
-  <footer>
+  <footer role="contentinfo">
     <p>&copy; {{YEAR}}</p>
   </footer>
 </body>

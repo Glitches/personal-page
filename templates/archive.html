@@ -12,20 +12,21 @@
 {{GOOGLE_ANALYTICS}}
 </head>
 <body>
-  <header>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <header role="banner">
     <h1><a href="index.html" class="home-link">{{SITE_TITLE}}</a></h1>
-    <nav>
+    <nav role="navigation" aria-label="Site navigation">
       <a href="index.html">Home</a> | <a href="archive.html">Archive</a> | <a href="tags.html">Tags</a>
     </nav>
   </header>
-  <main>
-    <article>
-      <h1>Archive</h1>
+  <main id="main-content" role="main">
+    <article aria-labelledby="archive-title">
+      <h1 id="archive-title">Archive</h1>
       <p>All posts in chronological order:</p>
       {{ARCHIVE_LIST}}
     </article>
   </main>
-  <footer>
+  <footer role="contentinfo">
     <p>&copy; {{YEAR}}</p>
   </footer>
 </body>

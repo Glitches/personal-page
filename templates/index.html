@@ -11,18 +11,21 @@
 {{GOOGLE_ANALYTICS}}
 </head>
 <body>
-  <header>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <header role="banner">
     <h1>My Personal Blog</h1>
-    <label class="dark-mode-toggle" for="dark-mode-checkbox">
-      <input type="checkbox" id="dark-mode-checkbox" />
-      <span class="toggle-slider"></span>
-    </label>
+    <div class="dark-mode-toggle-wrapper">
+      <label class="dark-mode-toggle" for="dark-mode-checkbox">
+        <input type="checkbox" id="dark-mode-checkbox" aria-label="Toggle dark mode" />
+        <span class="toggle-slider" aria-hidden="true"></span>
+      </label>
+    </div>
   </header>
-  <main>
+  <main id="main-content" role="main">
     {{AUTHOR_BIO}}
     {{POSTS}}
   </main>
-  <footer>
+  <footer role="contentinfo">
     <p>&copy; {{YEAR}}</p>
   </footer>
 </body>
