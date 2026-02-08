@@ -8,11 +8,13 @@
     "dev": "node build.js && npx serve dist",
     "watch": "node watch.js"
   },
-  "keywords": ["blog", "markdown"],
+  "keywords": [
+    "blog",
+    "markdown"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "marked": "^11.1.1"
-  },
-  "devDependencies": {}
+    "marked": "17.0.1"
+  }
 }

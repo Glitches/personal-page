@@ -12,7 +12,7 @@ const SITE_CONFIG = {
   url: process.env.SITE_URL || 'https://example.com',
   description: process.env.SITE_DESCRIPTION || 'A personal blog',
   author: process.env.SITE_AUTHOR || 'Author Name',
-  authorBio: process.env.SITE_AUTHOR_BIO || 'Placeholder bio text - update with your actual bio in build.js or via SITE_AUTHOR_BIO environment variable.',
+  authorBio: process.env.SITE_AUTHOR_BIO || 'I am a software engineer passionate about building simple, maintainable systems. I enjoy working with JavaScript, Node.js, and exploring new technologies.',
   authorAvatar: process.env.SITE_AUTHOR_AVATAR || '', // Path to avatar image (e.g., 'avatar.jpg')
   googleAnalyticsId: process.env.GOOGLE_ANALYTICS_ID || '' // Google Analytics 4 measurement ID (e.g., 'G-XXXXXXXXXX')
 };

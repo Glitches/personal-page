@@ -39,6 +39,7 @@
 
 body {
   font-family: 'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-display: swap;
   line-height: 1.6;
   color: var(--text-color);
   background-color: var(--bg-color);
@@ -177,6 +178,8 @@ header nav .home-link:hover {
 /* Main Content */
 main {
   margin-bottom: 3rem;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
 }
 
 /* Post Previews (Index Page) */
@@ -578,6 +581,7 @@ img {
   height: auto;
   margin-bottom: 1em;
   border-radius: 4px;
+  loading: lazy;
 }
 
 /* Horizontal Rule */
