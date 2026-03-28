@@ -122,7 +122,7 @@ function getMarkdownFiles() {
         }
         
         const content = fs.readFileSync(filePath, 'utf8');
-        const { metadata } = parseFrontmatter(content);
+        const { metadata, content: markdownContent } = parseFrontmatter(content);
         
         // Skip draft posts
         if (metadata.draft === 'true' || metadata.draft === true) {
@@ -137,7 +137,9 @@ function getMarkdownFiles() {
           slug: path.basename(file, '.md'),
           path: filePath,
           parsedDate: parsedDate,
-          dateString: metadata.date || ''
+          dateString: metadata.date || '',
+          metadata: metadata,
+          content: markdownContent
         };
       } catch (error) {
         console.error(`Error processing file ${file}:`, error.message);
@@ -289,12 +291,9 @@ function formatRSSDate(dateString, parsedDate) {
 // Build a single post
 function buildPost(fileInfo) {
   try {
-    if (!fs.existsSync(fileInfo.path)) {
-      throw new Error(`Post file not found: ${fileInfo.path}`);
-    }
-    
-    const content = fs.readFileSync(fileInfo.path, 'utf8');
-    const { metadata, content: markdownContent } = parseFrontmatter(content);
+    // Use cached content instead of re-reading file
+    const metadata = fileInfo.metadata;
+    const markdownContent = fileInfo.content;
     
     let htmlContent;
     try {
@@ -312,7 +311,7 @@ function buildPost(fileInfo) {
     const displayDate = formatDisplayDate(dateString, parsedDate);
     const date = displayDate ? `<time class="post-date" datetime="${parsedDate ? parsedDate.toISOString() : ''}" aria-label="Published on ${displayDate}">${displayDate}</time>` : '';
     
-    const excerpt = extractExcerpt(content, metadata);
+    const excerpt = extractExcerpt(`---\n${Object.entries(metadata).map(([key, value]) => `${key}: ${value}`).join('\n')}\n---\n${markdownContent}`, metadata);
     const readingTime = calculateReadingTime(markdownContent);
     const readingTimeStr = readingTime.minutes === 1 
       ? '1 min read' 
