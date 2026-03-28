@@ -786,10 +786,25 @@ function build() {
       console.warn('Warning: No markdown files found. Generating empty site...');
     }
     
-    const posts = markdownFiles.map(buildPost).filter(post => post !== null);
+    const posts = [];
+    let successfulPosts = 0;
     
-    if (posts.length === 0 && markdownFiles.length > 0) {
+    markdownFiles.forEach(fileInfo => {
+      try {
+        const post = buildPost(fileInfo);
+        if (post) {
+          posts.push(post);
+          successfulPosts++;
+        }
+      } catch (error) {
+        console.error(`Error building post ${fileInfo.filename}, skipping:`, error.message);
+      }
+    });
+    
+    if (successfulPosts === 0 && markdownFiles.length > 0) {
       console.warn('Warning: No posts were successfully built.');
+    } else if (successfulPosts < markdownFiles.length) {
+      console.warn(`Warning: ${markdownFiles.length - successfulPosts} post(s) failed to build, ${successfulPosts} succeeded.`);
     }
     
     try {
