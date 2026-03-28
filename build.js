@@ -629,6 +629,32 @@ function copyAssets() {
   }
 }
 
+// Copy static assets
+function copyStaticAssets() {
+  const staticDir = path.join(__dirname, 'static');
+  if (!fs.existsSync(staticDir)) {
+    return;
+  }
+  
+  const files = fs.readdirSync(staticDir);
+  files.forEach(file => {
+    const srcPath = path.join(staticDir, file);
+    const destPath = path.join(DIST_DIR, file);
+    
+    try {
+      if (fs.statSync(srcPath).isDirectory()) {
+        // Skip directories for now (could add recursive copy later)
+        console.log(`Skipping directory: ${file}`);
+      } else {
+        fs.copyFileSync(srcPath, destPath);
+        console.log(`Copied static asset: ${file}`);
+      }
+    } catch (error) {
+      console.warn(`Warning: Could not copy static asset ${file}:`, error.message);
+    }
+  });
+}
+
 // Build RSS feed
 function buildRSSFeed(posts) {
   const rssItems = posts.map(post => {
@@ -774,6 +800,7 @@ function build() {
       buildArchivePage(posts);
       build404Page();
       copyAssets();
+      copyStaticAssets();
     } catch (error) {
       console.error('Error during build process:', error.message);
       throw error;
